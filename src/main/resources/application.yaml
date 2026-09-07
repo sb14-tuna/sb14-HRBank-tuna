@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: hrbank
+
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update            # 개발 시에는 create 가 나을듯
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
