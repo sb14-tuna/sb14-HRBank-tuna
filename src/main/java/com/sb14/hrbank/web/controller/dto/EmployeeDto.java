@@ -3,7 +3,6 @@ package com.sb14.hrbank.web.controller.dto;
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
