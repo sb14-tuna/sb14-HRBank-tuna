@@ -2,14 +2,12 @@ package com.sb14.hrbank.domain.entity.employee;
 
 import com.sb14.hrbank.domain.entity.department.Department;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
-import com.sb14.hrbank.domain.service.employee.EmployeeService;
 import jakarta.persistence.*;
+import lombok.*;
+import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 import java.util.concurrent.ThreadLocalRandom;
-
-import lombok.*;
-import lombok.experimental.FieldDefaults;
 
 @AllArgsConstructor
 @NoArgsConstructor
