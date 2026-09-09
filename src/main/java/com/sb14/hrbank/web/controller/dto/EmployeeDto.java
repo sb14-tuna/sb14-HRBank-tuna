@@ -10,6 +10,7 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 
+@Getter
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class EmployeeDto {

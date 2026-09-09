@@ -57,7 +57,7 @@ public class EmployeeService implements IEmployeeService {
     @Override
     public EmployeeDto findById(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원: " + employeeId));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원: " + employeeId));    // 404
 
         return EmployeeDto.from(employee);
     }
@@ -98,7 +98,7 @@ public class EmployeeService implements IEmployeeService {
     @Transactional
     public void deleteEmployee(Long employeeId) {
         Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원: " + employeeId));
+                .orElseThrow(() -> new NoSuchElementException("존재하지 않는 직원: " + employeeId));    // 404
 
         // todo: 삭제 이력 히스토리 테이블에 적재
 

@@ -60,7 +60,7 @@ public class EmployeeApiController {
     ) {
         employeeService.deleteEmployee(id);
         return ResponseEntity
-                .status(HttpStatus.OK)
+                .status(HttpStatus.NO_CONTENT)
                 .body(null);
     }
 }
