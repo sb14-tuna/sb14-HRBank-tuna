@@ -28,6 +28,7 @@ public class File {
         sequenceName = "files_seq",
         allocationSize = 1
     )
+    @Column(name = "file_id")
     Long id;
 
     @Column(name = "file_name", nullable = false)
