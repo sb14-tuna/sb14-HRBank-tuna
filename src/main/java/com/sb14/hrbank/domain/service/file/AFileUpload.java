@@ -40,6 +40,17 @@ public abstract class AFileUpload implements FileUpload{
         }
     }
 
+    @Override
+    public void deleteFile(String filePath) {
+        if(Objects.isNull(filePath)) throw new RuntimeException("FILEPATH IS NULL");
+        try{
+            delete(filePath);
+        }catch (IOException e){
+            log.error("============FILE DELETE FAILED=============");
+            //throw new RuntimeException("");
+        }
+    }
+
     private String getFileName(FileCategory fileCategory, String originalFileName){
         String extension = extractExt(originalFileName);
         return fileCategory.getField() + "_" + UUID.randomUUID() + "." + extension;
@@ -52,4 +63,5 @@ public abstract class AFileUpload implements FileUpload{
 
     abstract String getFullPath(String fileName);
     abstract String storeFile(MultipartFile file, String filePathUrl) throws IOException;
+    abstract void delete(String filePath) throws IOException;
 }

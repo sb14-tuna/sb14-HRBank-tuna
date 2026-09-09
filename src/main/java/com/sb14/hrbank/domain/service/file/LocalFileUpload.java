@@ -18,7 +18,10 @@ public class LocalFileUpload extends AFileUpload{
 
     @Override
     String getFullPath(String fileName) {
-        return this.fileDir + fileName;
+        return Path.of(fileDir)
+            .resolve(fileName)
+            .normalize()
+            .toString();
     }
 
     @Override
@@ -29,5 +32,10 @@ public class LocalFileUpload extends AFileUpload{
         file.transferTo(key);
 
         return key.toString();
+    }
+
+    @Override
+    void delete(String filePath) throws IOException {
+        Files.deleteIfExists(Path.of(filePath));
     }
 }

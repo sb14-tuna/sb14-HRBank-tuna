@@ -6,4 +6,5 @@ import org.springframework.web.multipart.MultipartFile;
 
 public interface FileUpload {
     MetaFile uploadFile(MultipartFile file, FileCategory fileCategory);
+    void deleteFile(String filePath);
 }

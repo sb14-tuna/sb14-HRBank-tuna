@@ -3,7 +3,10 @@ package com.sb14.hrbank.domain.service.file;
 import com.sb14.hrbank.domain.entity.file.FileCategory;
 import com.sb14.hrbank.domain.entity.file.MetaFile;
 import com.sb14.hrbank.domain.repository.file.FileRepository;
+import java.io.IOException;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,7 +34,17 @@ public class FileService implements IFileService{
     @Transactional
     @Override
     public MetaFile createFile(MultipartFile file, FileCategory fileCategory) {
-        MetaFile metaFile = fileUpload.uploadFile(file, fileCategory);
-        return fileRepository.save(metaFile);
+        MetaFile metaFile = null;
+
+        try{
+            metaFile = fileUpload.uploadFile(file, fileCategory);
+            return fileRepository.save(metaFile);
+        }catch (DataAccessException e){
+            if(Objects.nonNull(metaFile)){
+                fileUpload.deleteFile(metaFile.getFilePath());
+            }
+
+            throw new RuntimeException("DB STORE FAILED");
+        }
     }
 }
