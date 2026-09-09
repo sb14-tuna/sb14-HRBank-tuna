@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
-public abstract class AFileUpload implements FileUpload{
+public abstract class AFileUpload implements IFileUpload {
 
     @Override
     public MetaFile uploadFile(MultipartFile file, FileCategory fileCategory) {

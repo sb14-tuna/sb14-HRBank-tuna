@@ -4,7 +4,7 @@ import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface FileUpload {
+public interface IFileUpload {
     MetaFile uploadFile(MultipartFile file, FileCategory fileCategory);
     void deleteFile(String filePath);
 }
