@@ -1,14 +1,12 @@
 package com.sb14.hrbank.domain.entity.employee;
 
 import com.sb14.hrbank.domain.entity.department.Department;
-import com.sb14.hrbank.domain.entity.employeehistory.EmployeeHistory;
-import com.sb14.hrbank.domain.entity.file.File;
+import com.sb14.hrbank.domain.entity.file.MetaFile;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.concurrent.ThreadLocalRandom;
 
-import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -75,7 +73,7 @@ public class Employee {
 
     @OneToOne
     @JoinColumn(name = "file_id", nullable = true)
-    File profileImage;
+    MetaFile profileImage;
 
 
     public static Employee init(
@@ -85,7 +83,7 @@ public class Employee {
             LocalDate hireDate,
             EmployeeStatus status,
             Department department,
-            File profileImage
+            MetaFile profileImage
     ) {
         return Employee.builder()
                 .name(name)

@@ -21,7 +21,7 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "files")
-public class File {
+public class MetaFile {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "files_seq")
     @SequenceGenerator(
         name = "files_seq",
@@ -35,7 +35,7 @@ public class File {
     String fileName;
 
     @Column(name = "file_size", nullable = false)
-    Integer fileSize;
+    Long fileSize;
 
     @Column(name = "file_type", nullable = false)
     String fileType;
@@ -47,7 +47,7 @@ public class File {
     @Column(name = "file_path", nullable = false)
     String filePath;
 
-    public static File init(String name, Integer size, String type, FileCategory category, String path){
-        return File.builder().fileName(name).fileSize(size).fileType(type).category(category).filePath(path).build();
+    public static MetaFile init(String name, Long size, String type, FileCategory category, String path){
+        return MetaFile.builder().fileName(name).fileSize(size).fileType(type).category(category).filePath(path).build();
     }
 }

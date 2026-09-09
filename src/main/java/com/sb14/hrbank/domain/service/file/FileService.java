@@ -1,8 +1,12 @@
 package com.sb14.hrbank.domain.service.file;
 
+import com.sb14.hrbank.domain.entity.file.FileCategory;
+import com.sb14.hrbank.domain.entity.file.MetaFile;
 import com.sb14.hrbank.domain.repository.file.FileRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 /*
     파일 서비스를 작업 중에 이걸 독립 서비스로 두는게맞나 싶음
@@ -13,8 +17,21 @@ import org.springframework.stereotype.Service;
  */
 @RequiredArgsConstructor
 @Service
-public class FileService {
+public class FileService implements IFileService{
     private final FileRepository fileRepository;
+    private final FileUpload fileUpload;
 
+    /*
+        타 서비스에서 호출로 실행됨
+        - 직원 등록 수정 요구사항에서 호출
+        - 백업 서비스에서 호출
 
+        - {메타 정보}는 데이터베이스에, {실제 파일}은 로컬 디스크에 저장합니다.
+     */
+    @Transactional
+    @Override
+    public MetaFile createFile(MultipartFile file, FileCategory fileCategory) {
+        MetaFile metaFile = fileUpload.uploadFile(file, fileCategory);
+        return fileRepository.save(metaFile);
+    }
 }
