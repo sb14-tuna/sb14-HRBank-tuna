@@ -48,12 +48,10 @@ public class Employee {
             name = "employee_number",
             unique = true,
             nullable = false,
-            updatable = false
+            updatable = false,
+            length = 10
     )
-    String employeeNumber = String.valueOf(
-            ThreadLocalRandom.current()
-                    .nextLong(1_000_000_000L, 10_000_000_000L)
-    );
+    String employeeNumber;
 
     @Column(
             name = "employee_position",
@@ -69,11 +67,11 @@ public class Employee {
     @Column(name = "employee_status", nullable = false)
     EmployeeStatus status;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
     Department department;
 
-    @OneToOne
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "file_id", nullable = true)
     File profileImage;
 
@@ -90,11 +88,19 @@ public class Employee {
         return Employee.builder()
                 .name(name)
                 .email(email)
+                .employeeNumber(generateEmployeeNumber())
                 .position(position)
                 .hireDate(hireDate)
                 .status(status)
                 .department(department)
                 .profileImage(profileImage)
                 .build();
+    }
+
+    private static String generateEmployeeNumber() {
+        return String.valueOf(
+                ThreadLocalRandom.current()
+                        .nextLong(1_000_000_000L, 10_000_000_000L)
+        );
     }
 }
