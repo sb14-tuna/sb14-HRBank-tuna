@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
@@ -15,13 +16,14 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "departments")
 @FieldDefaults(level = AccessLevel.PRIVATE)
+@Getter
 public class Department {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
     @Column(name = "department_id")
     Long id;
 
-    @Column(name = "department_name", nullable = false,unique = true)
+    @Column(name = "department_name", nullable = false, unique = true)
     String name;
 
     @Column(name = "department_description")

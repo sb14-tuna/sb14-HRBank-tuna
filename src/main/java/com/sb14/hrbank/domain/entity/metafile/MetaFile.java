@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.entity.file;
+package com.sb14.hrbank.domain.entity.metafile;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,10 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -21,7 +18,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "files")
-public class File {
+@Getter
+public class MetaFile {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "files_seq")
     @SequenceGenerator(
         name = "files_seq",
@@ -35,7 +33,7 @@ public class File {
     String fileName;
 
     @Column(name = "file_size", nullable = false)
-    Integer fileSize;
+    Long fileSize;
 
     @Column(name = "file_type", nullable = false)
     String fileType;
@@ -47,7 +45,7 @@ public class File {
     @Column(name = "file_path", nullable = false)
     String filePath;
 
-    public static File init(String name, Integer size, String type, FileCategory category, String path){
-        return File.builder().fileName(name).fileSize(size).fileType(type).category(category).filePath(path).build();
+    public static MetaFile init(String name, Long size, String type, FileCategory category, String path){
+        return MetaFile.builder().fileName(name).fileSize(size).fileType(type).category(category).filePath(path).build();
     }
 }
