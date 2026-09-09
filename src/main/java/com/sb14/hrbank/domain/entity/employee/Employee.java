@@ -71,11 +71,11 @@ public class Employee {
 
     @ManyToOne
     @JoinColumn(name = "department_id", nullable = false)
-    Department departmentId;
+    Department department;
 
     @OneToOne
     @JoinColumn(name = "file_id", nullable = true)
-    File profileImageId;
+    File profileImage;
 
 
     public static Employee init(
@@ -84,8 +84,8 @@ public class Employee {
             String position,
             LocalDate hireDate,
             EmployeeStatus status,
-            Department departmentId,
-            File profileImageId
+            Department department,
+            File profileImage
     ) {
         return Employee.builder()
                 .name(name)
@@ -93,8 +93,8 @@ public class Employee {
                 .position(position)
                 .hireDate(hireDate)
                 .status(status)
-                .departmentId(departmentId)
-                .profileImageId(profileImageId)
+                .department(department)
+                .profileImage(profileImage)
                 .build();
     }
 }
