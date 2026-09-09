@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.entity.file;
+package com.sb14.hrbank.domain.entity.metafile;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,20 +9,16 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Getter
 @Builder(access = AccessLevel.PRIVATE)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "files")
+@Getter
 public class MetaFile {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "files_seq")
     @SequenceGenerator(
