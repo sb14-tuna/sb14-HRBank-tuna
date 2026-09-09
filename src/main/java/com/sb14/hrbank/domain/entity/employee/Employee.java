@@ -1,14 +1,12 @@
 package com.sb14.hrbank.domain.entity.employee;
 
 import com.sb14.hrbank.domain.entity.department.Department;
-import com.sb14.hrbank.domain.entity.employeehistory.EmployeeHistory;
 import com.sb14.hrbank.domain.entity.file.File;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
 import java.util.concurrent.ThreadLocalRandom;
 
-import jakarta.validation.constraints.Size;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
