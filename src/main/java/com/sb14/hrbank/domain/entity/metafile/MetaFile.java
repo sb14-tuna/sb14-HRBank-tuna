@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.entity.file;
+package com.sb14.hrbank.domain.entity.metafile;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -9,10 +9,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.SequenceGenerator;
 import jakarta.persistence.Table;
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import lombok.experimental.FieldDefaults;
 
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
@@ -21,7 +18,8 @@ import lombok.experimental.FieldDefaults;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "files")
-public class File {
+@Getter
+public class MetaFile {
     @Id @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "files_seq")
     @SequenceGenerator(
         name = "files_seq",
@@ -42,12 +40,12 @@ public class File {
 
     @Column(name = "file_category", nullable = false)
     @Enumerated(EnumType.STRING)
-    FileCategory category;          // todo 파일타입과 카테고리가 겹쳐보이지만 실제 저장 형식은 파일타입이 관리하고 후에 필터링을 할 때 MIME 타입으로 하면 코드가 가독성이 떨어질거라 생각되어 이넘타입을 정의하고 필터링은 이넘으로 분기하도록 설곔
+    MetaFileCategory category;          // todo 파일타입과 카테고리가 겹쳐보이지만 실제 저장 형식은 파일타입이 관리하고 후에 필터링을 할 때 MIME 타입으로 하면 코드가 가독성이 떨어질거라 생각되어 이넘타입을 정의하고 필터링은 이넘으로 분기하도록 설곔
 
     @Column(name = "file_path", nullable = false)
     String filePath;
 
-    public static File init(String name, Integer size, String type, FileCategory category, String path){
-        return File.builder().fileName(name).fileSize(size).fileType(type).category(category).filePath(path).build();
+    public static MetaFile init(String name, Integer size, String type, MetaFileCategory category, String path){
+        return MetaFile.builder().fileName(name).fileSize(size).fileType(type).category(category).filePath(path).build();
     }
 }
