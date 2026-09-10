@@ -13,7 +13,7 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 @Transactional
 public class DepartmentServiceImpl implements IDepartmentService{
-    private final IDepartmentRepository departmentRepossitory;
+    private final IDepartmentRepository departmentRepository;
     private final IEmployeeRepository employeeRepository;
 
     @Override
@@ -40,7 +40,7 @@ public class DepartmentServiceImpl implements IDepartmentService{
         && departmentRepository.existsByName(updateRequest.getName())) {
             throw new IllegalArgumentException("이미 존재하는 부서명입니다.: " + updateRequest.getName());
         }
-        department.update(updateRequest.getName(), updateRequest.getDescription(), updateRequest.getEstablishedDate());
+        department.updateDepartmentInfo(updateRequest.getName(), updateRequest.getDescription(), updateRequest.getEstablishedDate());
         return DepartmentDto.from(department);
     }
     @Override
@@ -50,7 +50,7 @@ public class DepartmentServiceImpl implements IDepartmentService{
                 .orElseThrow(() -> new NoSuchElementException("존재하지 않는 부서: " + departmentId));
 
         if (employeeRepository.existsByDepartmentId(departmentId)) {
-            throw new IllegalArgumentException("이미 존재하는 부서명입니다.: " + updateRequest.getName());
+            throw new IllegalArgumentException("소속된 직원이 있어서 삭제할 수 없습니다.: " + departmentId);
         }
         departmentRepository.delete(department);
     }
