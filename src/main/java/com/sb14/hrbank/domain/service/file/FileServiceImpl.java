@@ -4,10 +4,13 @@ import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import com.sb14.hrbank.domain.repository.IFileRepository;
 
+import com.sb14.hrbank.web.exception.HrBankException;
+import com.sb14.hrbank.web.exception.HrBankExceptionType;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,7 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class FileService implements IFileService{
+public class FileServiceImpl implements IFileService{
     private final IFileRepository fileRepository;
     private final IFileUpload fileUpload;
 
@@ -64,5 +67,15 @@ public class FileService implements IFileService{
         } catch (DataAccessException e) {
             throw new RuntimeException("파일 삭제 실패");
         }
+    }
+
+    @Override
+    public FileDownload getFileDownload(Long id){
+        MetaFile metaFile = fileRepository.findById(id)
+            .orElseThrow(() -> new HrBankException(HrBankExceptionType.FILE_NOT_FOUND, "자세한 정보?"));
+
+        Resource resource = fileUpload.loadFile(metaFile.getFilePath());
+
+        return FileDownload.of(metaFile, resource);
     }
 }

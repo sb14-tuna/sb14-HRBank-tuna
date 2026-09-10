@@ -7,4 +7,5 @@ import org.springframework.web.multipart.MultipartFile;
 public interface IFileService {
     MetaFile createFile(MultipartFile file, FileCategory fileCategory);
     void deleteFile(Long id);
+    FileDownload getFileDownload(Long id);
 }
