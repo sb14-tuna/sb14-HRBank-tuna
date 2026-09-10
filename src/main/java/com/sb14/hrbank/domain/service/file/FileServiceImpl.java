@@ -4,8 +4,13 @@ import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import com.sb14.hrbank.domain.repository.IFileRepository;
 
+import com.sb14.hrbank.web.exception.HrBankException;
+import com.sb14.hrbank.web.exception.HrBankExceptionType;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,9 +23,10 @@ import org.springframework.web.multipart.MultipartFile;
 
     근데 다시 또 생각해보면 서비스가 독립 api 를 담당하는게 아니여도 파일 저장 실페에 따른 처리를 담당해야하기에 서비스를 두는게 맞는거같음
  */
+@Slf4j
 @RequiredArgsConstructor
 @Service
-public class FileService implements IFileService{
+public class FileServiceImpl implements IFileService{
     private final IFileRepository fileRepository;
     private final IFileUpload fileUpload;
 
@@ -46,5 +52,30 @@ public class FileService implements IFileService{
 
             throw new RuntimeException("DB STORE FAILED");
         }
+    }
+
+    @Transactional
+    @Override
+    public void deleteFile(Long fileId) {
+        MetaFile fileToDelete = null;
+        try {
+            log.info("============= 디스크 파일 삭제 시작 =================");
+            fileToDelete = fileRepository.findById(fileId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 파일: " + fileId));
+            fileUpload.deleteFile(fileToDelete.getFilePath());
+        } catch (NoSuchElementException e) {
+            log.warn("삭제하려는 파일이 존재하지 않음 - 일단 작동엔 문제 없으니 넘어간다");
+        } catch (DataAccessException e) {
+            throw new RuntimeException("파일 삭제 실패");
+        }
+    }
+
+    @Override
+    public FileDownload getFileDownload(Long id){
+        MetaFile metaFile = fileRepository.findById(id)
+            .orElseThrow(() -> new HrBankException(HrBankExceptionType.FILE_NOT_FOUND, "자세한 정보?"));
+
+        Resource resource = fileUpload.loadFile(metaFile.getFilePath());
+
+        return FileDownload.of(metaFile, resource);
     }
 }
