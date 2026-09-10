@@ -48,7 +48,7 @@ public class EmployeeApiController {
             @Valid @RequestPart("employee") EmployeeUpdateRequest updateRequest,
             @RequestPart(value = "profile", required = false) MultipartFile profile
     ) {
-        EmployeeDto updateResult = employeeService.updateEmployee(id, updateRequest);
+        EmployeeDto updateResult = employeeService.updateEmployee(id, updateRequest, profile);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(updateResult);
