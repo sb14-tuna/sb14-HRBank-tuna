@@ -10,16 +10,21 @@ import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
 
-@AllArgsConstructor
-@NoArgsConstructor
-@Builder
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder(access = AccessLevel.PRIVATE)
 @Entity
 @Table(name = "departments")
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Getter
 public class Department {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "department_seq")
+    @SequenceGenerator(
+            name = "department_seq",
+            sequenceName = "department_seq",
+            allocationSize = 1
+    )
     @Column(name = "department_id")
     Long id;
 
@@ -39,7 +44,7 @@ public class Department {
                 .establishedDate(establishedDate)
                 .build();
     }
-    public void update(String name, String description, LocalDate establishedDate) {
+    public void updateDepartmentInfo(String name, String description, LocalDate establishedDate) {
         this.name = name;
         this.description = description;
         this.establishedDate = establishedDate;
