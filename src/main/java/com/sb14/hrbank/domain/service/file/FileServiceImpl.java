@@ -23,7 +23,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class FileService implements IFileService{
+public class FileServiceImpl implements IFileService{
     private final IFileRepository fileRepository;
     private final IFileUpload fileUpload;
 
@@ -58,7 +58,8 @@ public class FileService implements IFileService{
         try {
             log.info("============= 디스크 파일 삭제 시작 =================");
             fileToDelete = fileRepository.findById(fileId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 파일: " + fileId));
-            fileUpload.deleteFile(fileToDelete.getFilePath());
+            fileRepository.delete(fileToDelete);                    // DB에서 삭제
+            fileUpload.deleteFile(fileToDelete.getFilePath());      // 디스크에서 삭제
         } catch (NoSuchElementException e) {
             log.warn("삭제하려는 파일이 존재하지 않음 - 일단 작동엔 문제 없으니 넘어간다");
         } catch (DataAccessException e) {

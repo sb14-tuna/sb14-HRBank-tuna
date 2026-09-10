@@ -2,7 +2,6 @@ package com.sb14.hrbank.domain.service.employee;
 
 import com.sb14.hrbank.domain.entity.department.Department;
 import com.sb14.hrbank.domain.entity.employee.Employee;
-import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import com.sb14.hrbank.domain.repository.IDepartmentRepository;
@@ -22,7 +21,7 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Transactional
-public class EmployeeService implements IEmployeeService {
+public class EmployeeServiceImpl implements IEmployeeService {
 
     private final IEmployeeRepository employeeRepository;
     private final IDepartmentRepository departmentRepository;
