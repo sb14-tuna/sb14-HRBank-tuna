@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.entity.file;
+package com.sb14.hrbank.domain.entity.metafile;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
