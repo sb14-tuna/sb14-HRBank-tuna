@@ -18,6 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Table(name = "employees")
 @Getter
 public class Employee {
+
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "employee_seq")
     @SequenceGenerator(
@@ -28,8 +29,10 @@ public class Employee {
     @Column(name = "employee_id")
     Long id;
 
+
     @Column(name = "employee_name", nullable = false)
     String name;
+
 
     @Column(
             name = "employee_email",
@@ -37,6 +40,7 @@ public class Employee {
             nullable = false
     )
     String email;
+
 
     // 랜덤 10자, 자동부여, 수정 불가능
     @Column(
@@ -48,6 +52,7 @@ public class Employee {
     )
     String employeeNumber;
 
+
     @Column(
             name = "employee_position",
             nullable = false,
@@ -55,22 +60,27 @@ public class Employee {
     )
     String position;
 
+
     @Column(name = "employee_hiredate", nullable = false)
     LocalDate hireDate;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "employee_status", nullable = false)
     EmployeeStatus status;
 
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "department_id", nullable = false)
     Department department;
+
 
     @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
     @JoinColumn(name = "file_id", nullable = true)
     MetaFile profileImage;
 
 
+    // public 정적 메소드만을 통한 객체 생성
     public static Employee init(
             String name,
             String email,
@@ -97,7 +107,8 @@ public class Employee {
             String position,
             LocalDate hireDate,
             EmployeeStatus status,
-            Department department
+            Department department,
+            MetaFile profileImage
     ) {
         this.name = name;
         this.email = email;
@@ -105,6 +116,11 @@ public class Employee {
         this.hireDate = hireDate;
         this.status = status;
         this.department = department;
+        this.profileImage = profileImage;
+    }
+
+    public void softDelete() {  // 이렇게 해도 되는지???
+        this.status = EmployeeStatus.DELETED;
     }
 
     private static String generateEmployeeNumber() {

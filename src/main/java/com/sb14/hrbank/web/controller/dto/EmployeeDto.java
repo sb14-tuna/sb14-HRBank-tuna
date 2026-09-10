@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 import java.time.LocalDate;
+import java.util.Objects;
 
 @Getter
 @RequiredArgsConstructor
@@ -35,7 +36,9 @@ public class EmployeeDto {
                 employee.getPosition(),
                 employee.getHireDate(),
                 employee.getStatus(),
-                null    // 일단 Null
+                Objects.isNull(employee.getProfileImage())
+                    ? null
+                    : employee.getProfileImage().getId()
         );
     }
 }
