@@ -1,4 +1,4 @@
-package com.sb14.hrbank.web.exception;
+package com.sb14.hrbank.domain.exception;
 
 import lombok.Getter;
 
