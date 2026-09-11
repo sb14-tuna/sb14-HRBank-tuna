@@ -17,7 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Builder(access = AccessLevel.PRIVATE)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-@SoftDelete
+//@SoftDelete -- 얘 하니까 에러 났음. Employee history FetchType.LAZY랑 충돌
 @Table(name = "employees")
 @Getter
 public class Employee {
