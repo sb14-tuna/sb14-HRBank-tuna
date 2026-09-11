@@ -5,8 +5,10 @@ import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
+import org.hibernate.annotations.SoftDelete;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.util.concurrent.ThreadLocalRandom;
 
 
@@ -15,6 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 @Builder(access = AccessLevel.PRIVATE)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
+@SoftDelete
 @Table(name = "employees")
 @Getter
 public class Employee {
@@ -48,7 +51,7 @@ public class Employee {
             unique = true,
             nullable = false,
             updatable = false,
-            length = 10
+            length = 16
     )
     String employeeNumber;
 
@@ -119,15 +122,13 @@ public class Employee {
         this.profileImage = profileImage;
     }
 
-    public void softDelete() {  // 이렇게 해도 되는지???
-        this.status = EmployeeStatus.DELETED;
-    }
 
     private static String generateEmployeeNumber() {
-        return String.valueOf(
-                ThreadLocalRandom.current()
-                        .nextLong(1_000_000_000L, 10_000_000_000L)
-        );
-    }
+        String year = Year.now().toString();
+        int randomNumber = ThreadLocalRandom.current()
+                .nextInt(100_000_000);
 
+        // 사원번호 예시: EMP-202600000000
+        return "EMP-" + year + String.format("%08d", randomNumber);
+    }
 }

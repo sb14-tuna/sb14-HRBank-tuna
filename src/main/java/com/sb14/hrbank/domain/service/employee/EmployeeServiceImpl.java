@@ -140,7 +140,6 @@ public class EmployeeServiceImpl implements IEmployeeService {
 
         // todo: 업데이트 이력 히스토리 테이블에 "직원 삭제"로 적재
 
-        employee.softDelete();  // EmployeeStatus.DELETED로 상태 변경
         employeeRepository.delete(employee);
     }
 }
