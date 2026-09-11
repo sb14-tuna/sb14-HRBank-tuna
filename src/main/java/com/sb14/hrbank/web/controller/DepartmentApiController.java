@@ -27,24 +27,15 @@ public class DepartmentApiController {
             @Valid @RequestPart("department")DepartmentCreateRequest request,
             @RequestPart(value = "profile", required = false) MultipartFile profile
             ) {
-        DepartmentDto createResult = departmentService.createDepartment(request, profile);
+        DepartmentDto createResult = departmentService.createDepartment(request);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(createResult);
     }
-    @GetMapping("/{id}")
-    public ResponseEntity<DepartmentDto> findById(
-            @PathVariable Long id
-    ) {
-        DepartmentDto findResult = departmentService.findById(id);
-        return ResponseEntity
-                .status(HttpStatus.OK)
-                .body(findResult);
-    }
     @PatchMapping("/{id}")
     public ResponseEntity<DepartmentDto> update(
             @PathVariable Long id,
-            @Valid @RequestPart DepartmentCreateRequest request {
+            @Valid @RequestPart DepartmentUpdateRequest updateRequest) {
         DepartmentDto updateResult = departmentService.updateDepartment(id, updateRequest);
         return ResponseEntity
                 .status(HttpStatus.OK)

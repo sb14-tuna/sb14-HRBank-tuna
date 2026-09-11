@@ -2,11 +2,12 @@ package com.sb14.hrbank.domain.service.file;
 
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
-import com.sb14.hrbank.web.exception.HrBankException;
-import com.sb14.hrbank.web.exception.HrBankExceptionType;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.UUID;
+
+import com.sb14.hrbank.domain.exception.HrBankException;
+import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
