@@ -1,6 +1,6 @@
 package com.sb14.hrbank.web.controller;
 
-import com.sb14.hrbank.domain.service.employee.EmployeeService;
+import com.sb14.hrbank.domain.service.employee.EmployeeServiceImpl;
 import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
 import com.sb14.hrbank.web.controller.dto.EmployeeDto;
 import com.sb14.hrbank.web.controller.dto.EmployeeUpdateRequest;
@@ -19,7 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/employees")
 public class EmployeeApiController {
 
-    private final EmployeeService employeeService;
+    private final EmployeeServiceImpl employeeService;
 
     @PostMapping
     public ResponseEntity<EmployeeDto> create(
