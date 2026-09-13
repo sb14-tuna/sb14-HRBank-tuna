@@ -1,7 +1,5 @@
 package com.sb14.hrbank.domain.service.file;
 
-
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
@@ -38,6 +36,16 @@ public class LocalFileUpload extends AFileUpload{
 
         Files.createDirectories(key.getParent());
         file.transferTo(key);
+
+        return key.toString();
+    }
+
+    @Override
+    String storeBackupFile(byte[] bytes, String filePathUrl) throws IOException {
+        Path key = Path.of(filePathUrl).toAbsolutePath();
+
+        Files.createDirectories(key.getParent());
+        Files.write(key, bytes);
 
         return key.toString();
     }

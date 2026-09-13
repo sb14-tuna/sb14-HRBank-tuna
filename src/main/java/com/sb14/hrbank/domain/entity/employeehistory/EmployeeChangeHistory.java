@@ -2,9 +2,11 @@ package com.sb14.hrbank.domain.entity.employeehistory;
 
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import jakarta.persistence.*;
+import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
@@ -12,6 +14,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Builder(access = AccessLevel.PRIVATE)
@@ -40,7 +43,7 @@ public class EmployeeChangeHistory {
     String ipAddress;
 
     @Column(name = "updated_at", nullable = false)
-    LocalDate updatedAt;
+    LocalDateTime updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "employee_id", nullable = false)
@@ -56,7 +59,7 @@ public class EmployeeChangeHistory {
             EmployeeChangeHistoryType type,
             String memo,
             String ipAddress,
-            LocalDate updatedAt,
+            LocalDateTime updatedAt,
             Employee employee,
             List<EmployeeChangeDetail> diffs
     ) {

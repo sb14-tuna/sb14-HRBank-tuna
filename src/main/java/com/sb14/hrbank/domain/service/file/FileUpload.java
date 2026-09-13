@@ -5,8 +5,9 @@ import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
-public interface IFileUpload {
+public interface FileUpload {
     MetaFile uploadFile(MultipartFile file, FileCategory fileCategory);
+    MetaFile uploadFile(byte[] bytesToFile, FileCategory fileCategory);
     void deleteFile(String filePath);
     Resource loadFile(String key);
 }

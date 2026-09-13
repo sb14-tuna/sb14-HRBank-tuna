@@ -6,7 +6,7 @@ import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import com.sb14.hrbank.domain.repository.DepartmentRepository;
 import com.sb14.hrbank.domain.repository.EmployeeRepository;
-import com.sb14.hrbank.domain.service.file.IFileService;
+import com.sb14.hrbank.domain.service.file.FileService;
 import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
 import com.sb14.hrbank.web.controller.dto.EmployeeDto;
 import com.sb14.hrbank.web.controller.dto.EmployeeUpdateRequest;
@@ -25,7 +25,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
-    private final IFileService fileService;
+    private final FileService fileService;
 
     @Override
     @Transactional
