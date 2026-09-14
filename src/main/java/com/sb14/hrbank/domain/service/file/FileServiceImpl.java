@@ -2,12 +2,17 @@ package com.sb14.hrbank.domain.service.file;
 
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
+import org.springframework.web.multipart.MultipartFile;
+import com.sb14.hrbank.domain.exception.HrBankException;
+import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.repository.FileRepository;
+
 
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,12 +63,21 @@ public class FileServiceImpl implements FileService {
         try {
             log.info("============= 디스크 파일 삭제 시작 =================");
             fileToDelete = fileRepository.findById(fileId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 파일: " + fileId));
-            fileRepository.delete(fileToDelete);                    // DB에서 삭제
-            fileUpload.deleteFile(fileToDelete.getFilePath());      // 디스크에서 삭제
+            fileUpload.deleteFile(fileToDelete.getFilePath());
         } catch (NoSuchElementException e) {
             log.warn("삭제하려는 파일이 존재하지 않음 - 일단 작동엔 문제 없으니 넘어간다");
         } catch (DataAccessException e) {
             throw new RuntimeException("파일 삭제 실패");
         }
+    }
+
+    @Override
+    public FileDownload getFileDownload(Long id){
+        MetaFile metaFile = fileRepository.findById(id)
+            .orElseThrow(() -> new HrBankException(HrBankExceptionType.FILE_NOT_FOUND, "자세한 정보?"));
+
+        Resource resource = fileUpload.loadFile(metaFile.getFilePath());
+
+        return FileDownload.of(metaFile, resource);
     }
 }
