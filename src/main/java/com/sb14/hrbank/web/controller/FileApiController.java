@@ -1,7 +1,7 @@
 package com.sb14.hrbank.web.controller;
 
 import com.sb14.hrbank.domain.service.file.FileDownload;
-import com.sb14.hrbank.domain.service.file.IFileService;
+import com.sb14.hrbank.domain.service.file.FileService;
 import jakarta.validation.constraints.NotNull;
 import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/files")
 public class FileApiController {
-    private final IFileService fileService;
+    private final FileService fileService;
 
     @GetMapping("/{id}/download")
     public ResponseEntity<Resource> downLoadFile(@NotNull @PathVariable Long id){

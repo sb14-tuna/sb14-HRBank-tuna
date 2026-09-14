@@ -13,7 +13,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
-public abstract class AFileUpload implements IFileUpload {
+public abstract class AFileUpload implements FileUpload {
 
     @Override
     public MetaFile uploadFile(MultipartFile file, FileCategory fileCategory) {

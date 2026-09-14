@@ -2,6 +2,7 @@ package com.sb14.hrbank.domain.service.file;
 
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
+import org.springframework.web.multipart.MultipartFile;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.repository.FileRepository;
@@ -27,9 +28,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @RequiredArgsConstructor
 @Service
-public class FileServiceImpl implements IFileService{
+public class FileServiceImpl implements FileService {
     private final FileRepository fileRepository;
-    private final IFileUpload fileUpload;
+    private final FileUpload fileUpload;
 
     /*
         타 서비스에서 호출로 실행됨
