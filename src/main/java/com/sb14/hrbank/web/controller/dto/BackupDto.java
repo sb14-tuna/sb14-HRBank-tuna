@@ -16,7 +16,6 @@ public record BackupDto(
     public static BackupDto from(BackupHistory backupHistory){
         if(Objects.isNull(backupHistory)) return null;
 
-
         Long fileId = Objects.isNull(backupHistory.getMetaFile()) ? null : backupHistory.getMetaFile().getId();
 
         return new BackupDto(
