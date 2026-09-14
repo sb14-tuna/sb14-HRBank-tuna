@@ -1,5 +1,6 @@
 package com.sb14.hrbank.web.controller.dto;
 
+import com.sb14.hrbank.domain.entity.employee.Employee;
 import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeHistory;
 import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeHistoryType;
 
@@ -14,10 +15,12 @@ public record ChangeLogDto(
         LocalDateTime at
 ) {
     public static ChangeLogDto from(EmployeeChangeHistory changeHistory) {
+        Employee employee = changeHistory.getEmployee();
+
         return new ChangeLogDto(
                 changeHistory.getId(),
                 changeHistory.getType(),
-                changeHistory.getEmployee().getEmployeeNumber(),
+                employee.getEmployeeNumber(),
                 changeHistory.getMemo(),
                 changeHistory.getIpAddress(),
                 changeHistory.getUpdatedAt()

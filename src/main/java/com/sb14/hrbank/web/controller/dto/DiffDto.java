@@ -10,8 +10,8 @@ public record DiffDto(
     public static DiffDto from(EmployeeChangeDetail changeDetail) {
         return new DiffDto(
                 changeDetail.getPropertyName(),
-                changeDetail.getBeforeValue() == null ? "-" : changeDetail.getBeforeValue(),
-                changeDetail.getAfterValue() == null ? "-" : changeDetail.getAfterValue()
+                changeDetail.getBeforeValue(),
+                changeDetail.getAfterValue()
         );
     }
 }
