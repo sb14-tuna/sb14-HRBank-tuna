@@ -7,14 +7,13 @@ import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import com.sb14.hrbank.domain.repository.DepartmentRepository;
 import com.sb14.hrbank.domain.repository.EmployeeRepository;
 import com.sb14.hrbank.domain.service.file.FileService;
-import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
-import com.sb14.hrbank.web.controller.dto.EmployeeDto;
-import com.sb14.hrbank.web.controller.dto.EmployeeUpdateRequest;
+import com.sb14.hrbank.web.controller.dto.*;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 
@@ -69,6 +68,61 @@ public class EmployeeServiceImpl implements EmployeeService {
     }
 
     @Override
+    public CursorPageResponseEmployeeDto findAll(EmployeeSearchRequest querySearchRequest) {
+        /*
+            CursorPageResponseEmployeeDto {
+                List<EmployeeDto> content;
+                String nextCursor;
+                Long nextIdAfter;
+                Integer size;
+                Long totalElements;
+                Boolean hasNext;
+            }
+        */
+        List<Employee> searchedEmployees =
+                employeeRepository.findAllByCondition(querySearchRequest);
+
+        boolean hasNextPage = searchedEmployees.size() > querySearchRequest.getSize();
+
+        if (hasNextPage) {
+            searchedEmployees.remove(searchedEmployees.size() - 1);
+        }
+
+        // dto로 변환
+        List<EmployeeDto> searchEmployeesDto = searchedEmployees.stream()
+                .map(EmployeeDto::from)
+                .toList();
+
+        String nextCursor = null;
+        Long nextIdAfter = null;
+        //다음 페이지가 있다면 현재 페이지의 마지막 직원을 찾습니다.
+        if (hasNextPage) {
+            Employee lastEmployeeOfPage = searchedEmployees.get(searchedEmployees.size() - 1);
+            nextCursor = switch (querySearchRequest.getSortField()) {
+                case "name" ->
+                    lastEmployeeOfPage.getName();
+                case "employeeNumber" ->
+                    lastEmployeeOfPage.getEmployeeNumber();
+                case "hireDate" ->
+                    lastEmployeeOfPage.getHireDate().toString();
+                default ->
+                    throw new IllegalArgumentException("정렬 필드가 아님");
+            };
+            nextIdAfter = lastEmployeeOfPage.getId();
+        }
+
+        long totalElements = employeeRepository.countByCondition(querySearchRequest);
+
+        return CursorPageResponseEmployeeDto.from(
+                searchEmployeesDto,
+                nextCursor,
+                nextIdAfter,
+                totalElements,
+                hasNextPage
+        );
+    }
+
+    @Override
     public EmployeeDto updateEmployee(
             Long employeeId,
             EmployeeUpdateRequest updateRequest,
@@ -115,7 +169,7 @@ public class EmployeeServiceImpl implements EmployeeService {
                 newProfile = null;
             }
         }
-        // 그런데 - 같은 프로필 이미지를 재첨부해서 수정 누르면 중복 저장됨 흠..
+        // 그런데 - 같은 프로필 이미지를 재첨부해서 수정 누르면 중복 저장됨
 
         employee.update(
                 updateRequest.getName(),
@@ -140,7 +194,6 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         // todo: 업데이트 이력 히스토리 테이블에 "직원 삭제"로 적재
 
-        employee.softDelete();  // EmployeeStatus.DELETED로 상태 변경
         employeeRepository.delete(employee);
     }
 }

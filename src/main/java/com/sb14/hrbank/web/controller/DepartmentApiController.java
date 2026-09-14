@@ -6,14 +6,12 @@ import com.sb14.hrbank.domain.service.department.DepartmentServiceImpl;
 import com.sb14.hrbank.web.controller.dto.DepartmentCreateRequest;
 import com.sb14.hrbank.web.controller.dto.DepartmentDto;
 import com.sb14.hrbank.web.controller.dto.DepartmentUpdateRequest;
-import com.sb14.hrbank.web.controller.dto.EmployeeDto;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
 @RestController
@@ -24,9 +22,8 @@ public class DepartmentApiController {
 
     @PostMapping
     public ResponseEntity<DepartmentDto> create(
-            @Valid @RequestPart("department")DepartmentCreateRequest request,
-            @RequestPart(value = "profile", required = false) MultipartFile profile
-            ) {
+            @Valid @RequestPart("department") DepartmentCreateRequest request
+    ) {
         DepartmentDto createResult = departmentService.createDepartment(request);
         return ResponseEntity
                 .status(HttpStatus.OK)
@@ -35,7 +32,8 @@ public class DepartmentApiController {
     @PatchMapping("/{id}")
     public ResponseEntity<DepartmentDto> update(
             @PathVariable Long id,
-            @Valid @RequestPart DepartmentUpdateRequest updateRequest) {
+            @Valid @RequestPart DepartmentUpdateRequest updateRequest
+    ) {
         DepartmentDto updateResult = departmentService.updateDepartment(id, updateRequest);
         return ResponseEntity
                 .status(HttpStatus.OK)

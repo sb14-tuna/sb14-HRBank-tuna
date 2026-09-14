@@ -3,7 +3,6 @@ package com.sb14.hrbank.domain.service.department;
 
 import com.sb14.hrbank.domain.entity.department.Department;
 import com.sb14.hrbank.domain.repository.DepartmentRepository;
-import com.sb14.hrbank.domain.repository.EmployeeRepository;
 import com.sb14.hrbank.web.controller.dto.DepartmentCreateRequest;
 import com.sb14.hrbank.web.controller.dto.DepartmentDto;
 import com.sb14.hrbank.web.controller.dto.DepartmentUpdateRequest;
@@ -18,7 +17,6 @@ import java.util.NoSuchElementException;
 @Transactional
 public class DepartmentServiceImpl implements DepartmentService {
     private final DepartmentRepository departmentRepository;
-    private final EmployeeRepository employeeRepository;
 
     @Override
     @Transactional

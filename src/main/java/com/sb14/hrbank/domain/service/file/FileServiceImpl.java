@@ -4,6 +4,7 @@ import com.sb14.hrbank.domain.entity.backuphistory.BackupHistory;
 import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeHistory;
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
+import org.springframework.web.multipart.MultipartFile;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.repository.FileRepository;
@@ -25,7 +26,6 @@ import org.springframework.core.io.Resource;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.multipart.MultipartFile;
 
 /*
     파일 서비스를 작업 중에 이걸 독립 서비스로 두는게맞나 싶음

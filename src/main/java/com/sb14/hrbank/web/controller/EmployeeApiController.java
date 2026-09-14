@@ -1,9 +1,7 @@
 package com.sb14.hrbank.web.controller;
 
-import com.sb14.hrbank.domain.service.employee.EmployeeServiceImpl;
-import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
-import com.sb14.hrbank.web.controller.dto.EmployeeDto;
-import com.sb14.hrbank.web.controller.dto.EmployeeUpdateRequest;
+import com.sb14.hrbank.domain.service.employee.EmployeeService;
+import com.sb14.hrbank.web.controller.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/employees")
 public class EmployeeApiController {
 
-    private final EmployeeServiceImpl employeeService;
+    private final EmployeeService employeeService;
 
     @PostMapping
     public ResponseEntity<EmployeeDto> create(
@@ -41,6 +39,17 @@ public class EmployeeApiController {
                 .status(HttpStatus.OK)
                 .body(findResult);
     }
+
+    @GetMapping
+    public ResponseEntity<CursorPageResponseEmployeeDto> findAll(
+            @Valid @ModelAttribute EmployeeSearchRequest querySearchRequest
+    ) {
+        CursorPageResponseEmployeeDto querySearchResult = employeeService.findAll(querySearchRequest);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(querySearchResult);
+    }
+
 
     @PatchMapping("/{id}")
     public ResponseEntity<EmployeeDto> update(
