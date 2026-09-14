@@ -10,9 +10,8 @@ import com.sb14.hrbank.domain.repository.FileRepository;
 
 
 import com.sb14.hrbank.domain.repository.backuphistory.BackupHistoryRepository;
-import com.sb14.hrbank.domain.repository.employeehistory.IEmployeeHistoryRepository;
+import com.sb14.hrbank.domain.repository.employeehistory.EmployeeHistoryRepository;
 import com.sb14.hrbank.domain.service.backuphistory.BackupHistoryService;
-import com.sb14.hrbank.web.controller.dto.BackupDto;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import java.time.Instant;
@@ -44,7 +43,7 @@ public class FileServiceImpl implements FileService {
 
     private final BackupHistoryService backupHistoryService;
     private final BackupHistoryRepository backupHistoryRepository;
-    private final IEmployeeHistoryRepository employeeHistoryRepository;
+    private final EmployeeHistoryRepository employeeHistoryRepository;
     private final FileGenerator fileGenerator;
 
     @PersistenceContext

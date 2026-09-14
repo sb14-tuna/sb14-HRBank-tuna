@@ -14,9 +14,8 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleHrBankDomainException(HrBankException e){
         log.warn("서비스 로직 처리 중 예외 발생 ------- message : {}", e.getMessage());
         HrBankExceptionType type = e.getType();
-        String message = e.getMessage();
 
         return ResponseEntity.status(type.getStatus())
-            .body(ErrorResponse.of(type));
+            .body(ErrorResponse.from(type));
     }
 }
