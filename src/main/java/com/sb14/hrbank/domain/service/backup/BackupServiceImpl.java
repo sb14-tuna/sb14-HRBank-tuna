@@ -6,14 +6,13 @@ import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import com.sb14.hrbank.domain.repository.EmployeeRepository;
 import com.sb14.hrbank.domain.repository.EmployeeRepository.EmployeeCsvForm;
-import com.sb14.hrbank.domain.repository.FileRepository;
 import com.sb14.hrbank.domain.repository.backuphistory.BackupHistoryRepository;
 import com.sb14.hrbank.domain.repository.employeehistory.EmployeeHistoryRepository;
 import com.sb14.hrbank.domain.service.backuphistory.BackupHistoryService;
 import com.sb14.hrbank.domain.service.file.FileService;
-import com.sb14.hrbank.domain.service.file.fileupload.FileUpload;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -31,10 +30,9 @@ import org.springframework.transaction.annotation.Transactional;
 public class BackupServiceImpl implements BackupService {
     private final BackupHistoryService backupHistoryService;
     private final FileService fileService;
-    private final EmployeeRepository employeeRepository;
     private final BackupHistoryRepository backupHistoryRepository;
     private final EmployeeHistoryRepository employeeHistoryRepository;
-    private final FileGenerator fileGenerator;
+    private final CsvBackupFileGenerator csvBackupFileGenerator;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -75,58 +73,34 @@ public class BackupServiceImpl implements BackupService {
     @Override
     @Transactional
     public BackupHistory startBackup(String worker){
-        // 새로운 트랜잭션
+        // 트랜잭션2
         BackupHistory backupHistory = entityManager.merge(backupHistoryService.createBackupHistory(worker));    // 새 트랜잭션에서 관리하던 객체를 이전 트랜잭션의 영속성 컨텍스트로 관리하고 싶음
 
         EmployeeChangeHistory employeeHistory = employeeHistoryRepository.findTopByOrderByUpdatedAtDesc()
             .orElseThrow( () -> new NoSuchElementException("직원 변경 레코드 값이 없음"));
 
         try{
-            // 백업이 필요없다면
             if(validateSkipBackup(employeeHistory)){
                 backupHistory.skipBackup();
                 return backupHistory;
             }
         }catch (DataAccessException e){
-            log.error(" 백업 히스토리 백업 판단 중 예외 발생 ");
-            // 오토커밋된거 삭제
+            log.error(" 백업 히스토리 백업 판단 중 디비 예외 발생 ");
             backupHistoryRepository.delete(backupHistory);
 
             // todo : 이벤트 발행(디비 예외시)
-            throw new RuntimeException(" 서버 내부 오류 발생 ");
+            throw e;
         }
 
-        // 백업 해야될 경우
-        Long chunkSize = 5000L;
-        Long idAfter = 0L;
-        FileCategory category = FileCategory.BACKUP_CSV;
-        boolean firstPage = true;
-        byte[] bytesToFile = null;
-        String filePath = fileService.beginFile(category);
-
+        // 백업 진행
         try{
-            while(true){
-                List<EmployeeCsvForm> employeeCsvForms = employeeRepository.selectEmployeeInfoCsvFormPage(idAfter, chunkSize);
-                if(employeeCsvForms.isEmpty()) break;
-
-                bytesToFile = fileGenerator.createCsvFile(employeeCsvForms, firstPage);
-                firstPage = false;
-                idAfter = employeeCsvForms.get(employeeCsvForms.size() - 1).id();
-                // 파일 서비스 호출
-                fileService.appendFile(bytesToFile, filePath);
-            }
-
-            MetaFile metaFile = fileService.completeBackupFile(filePath, category); // 실제 경로저장
-
+            Path csvFilePath = csvBackupFileGenerator.createCsvFile();
+            MetaFile metaFile = fileService.completeFile(csvFilePath, FileCategory.BACKUP_CSV);
             backupHistory.attachMetaFile(metaFile);
             backupHistory.completeBackup();
         }catch (Exception e){
-            log.error(" 백업 파일 생성 중 오류 발생 ", e);
-
-            bytesToFile = fileGenerator.createErrorLogFile(worker, e.getMessage());
-            category = FileCategory.ERROR_LOG;
-            MetaFile metaFile = fileService.createErrorLogFile(bytesToFile, category);
-
+            Path errorLogFilePath = csvBackupFileGenerator.createErrorLogFile(worker, e.getMessage());
+            MetaFile metaFile = fileService.completeFile(errorLogFilePath, FileCategory.ERROR_LOG);
             backupHistory.attachMetaFile(metaFile);
             backupHistory.failBackup();
         }

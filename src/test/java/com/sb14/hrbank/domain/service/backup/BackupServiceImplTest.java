@@ -12,6 +12,6 @@ class BackupServiceImplTest {
     @Test
     void 베베베베() {
         String worker = "system";
-        backupService.startBackup(worker    );
+        backupService.startBackup(worker);
     }
 }

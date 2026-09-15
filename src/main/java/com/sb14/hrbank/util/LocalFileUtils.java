@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.service.file.fileupload;
+package com.sb14.hrbank.util;
 
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
@@ -21,10 +21,10 @@ import org.springframework.web.multipart.MultipartFile;
     추상클래스에서 공통 파일 익셉션으로 잡아 처리하도록 구현
  */
 @Component
-public class LocalFileUpload extends AFileUpload {
+public class LocalFileUtils extends AbstractFileUtils {
     private final String fileDir;
 
-    public LocalFileUpload(@Value("${file.upload-dir}") String fileDir) {
+    public LocalFileUtils(@Value("${file.upload-dir}") String fileDir) {
         this.fileDir = fileDir;
     }
 
@@ -47,7 +47,7 @@ public class LocalFileUpload extends AFileUpload {
     }
 
     @Override
-    String storeBackupFile(byte[] bytes, String filePathUrl) throws IOException {
+    String storeFile(byte[] bytes, String filePathUrl) throws IOException {
         Path key = Path.of(filePathUrl).toAbsolutePath();
 
         Files.createDirectories(key.getParent());
@@ -76,11 +76,11 @@ public class LocalFileUpload extends AFileUpload {
         백업 파일 생성 전용
      */
     @Override
-    public String createFilePath(FileCategory fileCategory) {
+    public Path createCsvFile(FileCategory fileCategory) {
         String extension = fileCategory.equals(FileCategory.BACKUP_CSV) ? "csv" : "log";
         String fileName = fileCategory.getField() + "_" + UUID.randomUUID() + "." + extension;
 
-        return getFullPath(fileName);
+        return Path.of(getFullPath(fileName));
     }
 
     @Override
@@ -97,10 +97,8 @@ public class LocalFileUpload extends AFileUpload {
     }
 
     @Override
-    public MetaFile completeFile(String filePath, FileCategory fileCategory) {
+    public MetaFile completeFile(Path path, FileCategory fileCategory) {
         try {
-            Path path = Path.of(filePath).toAbsolutePath();
-
             String fileName = path.getFileName().toString();
             long fileSize = Files.size(path);
             String fileType = fileCategory.equals(FileCategory.BACKUP_CSV) ? "text/csv" : "text/plain";
