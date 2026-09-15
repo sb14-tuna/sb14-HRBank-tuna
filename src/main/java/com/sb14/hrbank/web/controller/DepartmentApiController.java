@@ -22,7 +22,7 @@ public class DepartmentApiController {
 
     @PostMapping
     public ResponseEntity<DepartmentDto> create(
-            @Valid @RequestPart("department") DepartmentCreateRequest request
+            @Valid @RequestBody DepartmentCreateRequest request
     ) {
         DepartmentDto createResult = departmentService.createDepartment(request);
         return ResponseEntity
@@ -32,7 +32,7 @@ public class DepartmentApiController {
     @PatchMapping("/{id}")
     public ResponseEntity<DepartmentDto> update(
             @PathVariable Long id,
-            @Valid @RequestPart DepartmentUpdateRequest updateRequest
+            @Valid @RequestBody DepartmentUpdateRequest updateRequest
     ) {
         DepartmentDto updateResult = departmentService.updateDepartment(id, updateRequest);
         return ResponseEntity
