@@ -1,4 +1,4 @@
-package com.sb14.hrbank.web.controller.dto.employee.stats;
+package com.sb14.hrbank.web.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;

@@ -1,4 +1,4 @@
-package com.sb14.hrbank.web.controller.dto.employee.stats;
+package com.sb14.hrbank.web.controller.dto;
 
 public class EmployeeTrendDto {
     String date;

@@ -12,11 +12,11 @@ import com.sb14.hrbank.domain.entity.employee.EmployeeGroupCount;
 import com.sb14.hrbank.domain.repository.employee.EmployeeRepository;
 import com.sb14.hrbank.domain.service.file.FileService;
 import com.sb14.hrbank.web.controller.dto.*;
-import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeCreateRequest;
-import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeDto;
-import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeUpdateRequest;
-import com.sb14.hrbank.web.controller.dto.employee.stats.EmployeeCountRequest;
-import com.sb14.hrbank.web.controller.dto.employee.stats.EmployeeDistributionDto;
+import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
+import com.sb14.hrbank.web.controller.dto.EmployeeDto;
+import com.sb14.hrbank.web.controller.dto.EmployeeUpdateRequest;
+import com.sb14.hrbank.web.controller.dto.EmployeeCountRequest;
+import com.sb14.hrbank.web.controller.dto.EmployeeDistributionDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -98,7 +98,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         }
 
         // dto로 변환
-        List<EmployeeDto> searchEmployeesDto = searchedEmployees.stream()
+        List<EmployeeDto> searchedEmployeesDto = searchedEmployees.stream()
                 .map(EmployeeDto::from)
                 .toList();
 
@@ -123,7 +123,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         long totalElements = employeeRepository.countByCondition(request);
 
         return CursorPageResponseEmployeeDto.from(
-                searchEmployeesDto,
+                searchedEmployeesDto,
                 nextCursor,
                 nextIdAfter,
                 totalElements,

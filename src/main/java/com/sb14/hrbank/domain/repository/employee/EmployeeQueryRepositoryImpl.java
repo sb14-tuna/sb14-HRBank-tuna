@@ -244,7 +244,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
             case "hireDate" -> {
                 LocalDate cursorDate = null;
                 try {
-                    cursorDate = LocalDate.parse(cursor);   // String으로 LocalDate가 들어오기 때문에 parse 먼저
+                    cursorDate = LocalDate.parse(cursor);   // String으로 cursor가 들어오기 때문에 LocalDate로 parse 먼저
                     yield cursorCondition(
                             employee.hireDate,      // employee의 hireDate 컬럼 지정
                             cursorDate,

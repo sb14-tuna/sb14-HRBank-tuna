@@ -2,12 +2,11 @@ package com.sb14.hrbank.domain.service.employee;
 
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.web.controller.dto.*;
-import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeCreateRequest;
-import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeDto;
-import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeQueryRequest;
-import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeUpdateRequest;
-import com.sb14.hrbank.web.controller.dto.employee.stats.EmployeeCountRequest;
-import com.sb14.hrbank.web.controller.dto.employee.stats.EmployeeDistributionDto;
+import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
+import com.sb14.hrbank.web.controller.dto.EmployeeDto;
+import com.sb14.hrbank.web.controller.dto.EmployeeUpdateRequest;
+import com.sb14.hrbank.web.controller.dto.EmployeeCountRequest;
+import com.sb14.hrbank.web.controller.dto.EmployeeDistributionDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
