@@ -16,23 +16,24 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/department")
+@RequestMapping("/api/departments")
 public class DepartmentApiController {
     private final DepartmentServiceImpl departmentService;
 
     @PostMapping
     public ResponseEntity<DepartmentDto> create(
-            @Valid @RequestPart("department") DepartmentCreateRequest request
+            @Valid @RequestBody DepartmentCreateRequest request
     ) {
         DepartmentDto createResult = departmentService.createDepartment(request);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(createResult);
     }
+
     @PatchMapping("/{id}")
     public ResponseEntity<DepartmentDto> update(
             @PathVariable Long id,
-            @Valid @RequestPart DepartmentUpdateRequest updateRequest
+            @Valid @RequestBody DepartmentUpdateRequest updateRequest
     ) {
         DepartmentDto updateResult = departmentService.updateDepartment(id, updateRequest);
         return ResponseEntity
