@@ -2,6 +2,7 @@ package com.sb14.hrbank.domain.service.file;
 
 
 
+import com.sb14.hrbank.domain.entity.backuphistory.BackupHistory;
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import lombok.extern.slf4j.Slf4j;
@@ -46,5 +47,12 @@ class FileServiceImplTest {
         Assertions.assertThat(metaFile).isNotNull();
         Assertions.assertThat(metaFile.getCategory()).isEqualTo(FileCategory.PROFILE_IMAGE);
         log.info("==== {} ==== {}", metaFile.getFilePath(), metaFile.getFileName());
+    }
+
+    @Test
+    void 백업_테스트(){
+        BackupHistory backupHistory = fileServiceImpl.startBackup("system");
+
+        log.info(" ============= {} , {} , {}", backupHistory.getStartedAt(), backupHistory.getState(), backupHistory.getMetaFile());
     }
 }
