@@ -1,4 +1,4 @@
-package com.sb14.hrbank.web.controller.dto;
+package com.sb14.hrbank.web.controller.dto.employee.management;
 
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import jakarta.validation.constraints.NotBlank;

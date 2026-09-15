@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.repository;
+package com.sb14.hrbank.domain.repository.file;
 
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import org.springframework.data.jpa.repository.JpaRepository;

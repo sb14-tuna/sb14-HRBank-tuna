@@ -1,4 +1,4 @@
-package com.sb14.hrbank.web.controller.dto;
+package com.sb14.hrbank.web.controller.dto.employee.management;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.repository;
+package com.sb14.hrbank.domain.repository.department;
 
 import com.sb14.hrbank.domain.entity.department.Department;
 import org.springframework.data.jpa.repository.JpaRepository;

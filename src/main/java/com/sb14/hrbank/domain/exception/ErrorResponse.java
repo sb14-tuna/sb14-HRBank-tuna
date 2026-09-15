@@ -1,6 +1,6 @@
-package com.sb14.hrbank.web.exception;
+package com.sb14.hrbank.domain.exception;
 
-import com.sb14.hrbank.domain.exception.HrBankExceptionType;
+import org.springframework.http.HttpStatus;
 
 import java.time.Instant;
 
@@ -16,6 +16,15 @@ public record ErrorResponse(
             type.getStatus().value(),
             type.getMessage(),
             type.getDetails()
+        );
+    }
+
+    public static ErrorResponse of(HttpStatus status, String message, String details) {
+        return new ErrorResponse(
+                Instant.now(),
+                status.value(),
+                message,
+                details
         );
     }
 }

@@ -1,5 +1,6 @@
 package com.sb14.hrbank.web.controller.dto;
 
+import com.sb14.hrbank.web.controller.dto.employee.management.EmployeeDto;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

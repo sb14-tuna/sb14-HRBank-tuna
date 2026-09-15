@@ -2,7 +2,7 @@ package com.sb14.hrbank.domain.service.department;
 
 
 import com.sb14.hrbank.domain.entity.department.Department;
-import com.sb14.hrbank.domain.repository.DepartmentRepository;
+import com.sb14.hrbank.domain.repository.department.DepartmentRepository;
 import com.sb14.hrbank.web.controller.dto.DepartmentCreateRequest;
 import com.sb14.hrbank.web.controller.dto.DepartmentDto;
 import com.sb14.hrbank.web.controller.dto.DepartmentUpdateRequest;

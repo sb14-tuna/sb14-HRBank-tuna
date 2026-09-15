@@ -1,12 +1,18 @@
-package com.sb14.hrbank.domain.repository;
+package com.sb14.hrbank.domain.repository.employee;
 
+import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
 import com.querydsl.core.types.dsl.BooleanExpression;
 import com.querydsl.core.types.dsl.ComparableExpression;
+import com.querydsl.core.types.dsl.NumberExpression;
+import com.querydsl.core.types.dsl.StringExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sb14.hrbank.domain.entity.employee.Employee;
+import com.sb14.hrbank.domain.entity.employee.EmployeeGroupCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
-import com.sb14.hrbank.web.controller.dto.EmployeeSearchRequest;
+import com.sb14.hrbank.domain.exception.HrBankException;
+import com.sb14.hrbank.domain.exception.HrBankExceptionType;
+import com.sb14.hrbank.domain.service.employee.EmployeeSearchCondition;
 import lombok.RequiredArgsConstructor;
 
 import java.time.LocalDate;
@@ -23,8 +29,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Employee> findAllByCondition(EmployeeSearchRequest request) {
-
+    public List<Employee> findAllByCondition(EmployeeSearchCondition condition) {
         return queryFactory
                 .select(employee)
                 .from(employee)
@@ -32,50 +37,50 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 .leftJoin(employee.profileImage).fetchJoin()    // 프로필 없는 직원도 join (필수 아니었음)
                 .where(
                         // 각 employee row의 컬럼 값이 request에 들어온 값과 같으면 통과
-                        nameOrEmailContains(request.getNameOrEmail()),
-                        employeeNumberContains(request.getEmployeeNumber()),
-                        departmentNameContains(request.getDepartmentName()),
-                        positionContains(request.getPosition()),
-                        hireDateGreaterThanOrEqual(request.getHireDateFrom()),
-                        hireDateLessThanOrEqual(request.getHireDateTo()),
-                        statusEquals(request.getStatus()),
+                        nameOrEmailContains(condition.getNameOrEmail()),
+                        employeeNumberContains(condition.getEmployeeNumber()),
+                        departmentNameContains(condition.getDepartmentName()),
+                        positionContains(condition.getPosition()),
+                        hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
+                        hireDateLessThanOrEqual(condition.getHireDateTo()),
+                        statusEquals(condition.getStatus()),
                         cursorCondition(
-                                request.getCursor(),
-                                request.getIdAfter(),
-                                request.getSortField(),
-                                isDescending(request.getSortDirection())
+                                condition.getCursor(),
+                                condition.getIdAfter(),
+                                condition.getSortField(),
+                                isDescending(condition.getSortDirection())
                         )
                 )
                 .orderBy(
                         // 1차 정렬: 사용자가 선택한 정렬 필드로
                         primarySortBySortField(
-                                request.getSortField(),
-                                isDescending(request.getSortDirection())
+                                condition.getSortField(),
+                                isDescending(condition.getSortDirection())
                         ),
                         // 2차 정렬: 직원 Id로
                         secondarySortById(
-                                isDescending(request.getSortDirection())
+                                isDescending(condition.getSortDirection())
                         )
                 )
-                .limit(request.getSize() + 1)
+                .limit(condition.getSize() + 1)
                 .fetch();
     }
 
 
     @Override
-    public long countByCondition(EmployeeSearchRequest request) {
+    public long countByCondition(EmployeeSearchCondition condition) {
         Long totalElements = queryFactory
                 .select(employee.count())
                 .from(employee)
                 .join(employee.department)
                 .where(
-                        nameOrEmailContains(request.getNameOrEmail()),
-                        employeeNumberContains(request.getEmployeeNumber()),
-                        departmentNameContains(request.getDepartmentName()),
-                        positionContains(request.getPosition()),
-                        hireDateGreaterThanOrEqual(request.getHireDateFrom()),
-                        hireDateLessThanOrEqual(request.getHireDateTo()),
-                        statusEquals(request.getStatus())
+                        nameOrEmailContains(condition.getNameOrEmail()),
+                        employeeNumberContains(condition.getEmployeeNumber()),
+                        departmentNameContains(condition.getDepartmentName()),
+                        positionContains(condition.getPosition()),
+                        hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
+                        hireDateLessThanOrEqual(condition.getHireDateTo()),
+                        statusEquals(condition.getStatus())
                 )
                 .fetchOne();
         return (Objects.nonNull(totalElements))
@@ -83,6 +88,48 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 : 0;
     }
 
+    @Override
+    public List<EmployeeGroupCount> findByEmployeeDistribution(
+            String groupBy,
+            EmployeeStatus status) {
+        StringExpression groupingColumn = groupColumnByGroupBy(groupBy);
+        NumberExpression<Long> countColumn = employee.count();
+
+        List<Tuple> groupedEmployees = queryFactory
+                .select(groupingColumn, countColumn)
+                .from(employee)
+                .join(employee.department)
+                .where(statusEquals(status))
+                .groupBy(groupingColumn)
+                .orderBy(countColumn.desc(), groupingColumn.asc())
+                .fetch();
+
+        return groupedEmployees.stream()
+                .map(tuple ->
+                        EmployeeGroupCount.of(
+                                tuple.get(groupingColumn),
+                                Objects.requireNonNullElse(
+                                        tuple.get(countColumn),
+                                        0L
+                                )
+                        )
+                )
+                .toList();
+    }
+
+    @Override
+    public long countEmployeesByStatusAndDateRange(EmployeeStatus status, LocalDate fromDate, LocalDate toDate) {
+        Long employeeCount = queryFactory
+                .select(employee.count())
+                .from(employee)
+                .where(
+                        statusEquals(status),
+                        hireDateGreaterThanOrEqual(fromDate),
+                        hireDateLessThanOrEqual(toDate)
+                )
+                .fetchOne();
+        return (Objects.nonNull(employeeCount)) ? employeeCount : 0;
+    }
 
     /* where 절 */
     private BooleanExpression nameOrEmailContains(String keyword) {
@@ -127,6 +174,16 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     private boolean isDescending(String sortDirection) {    // = is내림차순
         return sortDirection.equals("desc");
     }
+    private StringExpression groupColumnByGroupBy(String groupBy) {
+        return switch (groupBy) {
+            case "department" -> employee.department.name;
+            case "position" -> employee.position;
+            default -> throw new HrBankException(
+                    HrBankExceptionType.ILLEGAL_DISTRIBUTION_GROUP,
+                    groupBy
+            );
+        };
+    }
     // 1차 정렬 - 사용자가 선택한 거에 대해 정렬
     private OrderSpecifier<?> primarySortBySortField(String sortField, boolean isDescending) {
         return switch (sortField) {
@@ -143,7 +200,10 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                         ? employee.hireDate.desc()
                         : employee.hireDate.asc();
             default ->
-                throw new RuntimeException("정렬 필드가 아닌 필드");
+                throw new HrBankException(
+                        HrBankExceptionType.ILLEGAL_SORT_FIELD,
+                        sortField
+                );
         };
     }
     // 2차 정렬 - 그 안에서 한번 더 id로 정렬
@@ -182,7 +242,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                         isDescending
                 );
             case "hireDate" -> {
-                LocalDate cursorDate;
+                LocalDate cursorDate = null;
                 try {
                     cursorDate = LocalDate.parse(cursor);   // String으로 LocalDate가 들어오기 때문에 parse 먼저
                     yield cursorCondition(
@@ -192,11 +252,17 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                             isDescending
                     );
                 } catch (DateTimeParseException e) {
-                    throw new IllegalArgumentException("형식 yyyy-MM-dd");
+                    throw new HrBankException(
+                            HrBankExceptionType.ILLEGAL_DATE_FORMAT,
+                            cursor
+                    );
                 }
             }
             default ->
-                throw new IllegalArgumentException("정렬 필드가 아닌 필드");
+                throw new HrBankException(
+                        HrBankExceptionType.ILLEGAL_SORT_FIELD,
+                        sortField
+                );
         };
     }
 
@@ -207,29 +273,29 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
             Long idAfter,                       // 이전 페이지 마지막 직원 ID (10)
             boolean isDescending
     ) {
-        if (isDescending) { // 내림차순
-            return employeeColumn.lt(cursorValue) // lt = less than
+        // 프론트가 idAfter 안 보내면 cursorValue만 가지고 정렬한다 -- cursor랑 idAfter 같이 받아야 하는데, 프론트는 cursor만 준다 (프론트 이슈)
+        if (Objects.isNull(idAfter)) {
+            return isDescending
+                    ? employeeColumn.lt(cursorValue)
+                    : employeeColumn.gt(cursorValue);
+        }
+
+        return isDescending
+                ? employeeColumn
+                    .lt(cursorValue) // lt = less than (내림차순)
                     .or(
                             employeeColumn
                                     .eq(cursorValue)
                                     .and(employee.id.lt(idAfter))   // 2차 정렬 id로
+                    )
+                : employeeColumn
+                    .gt(cursorValue) // gt = greater than (오름차순)
+                    .or(
+                            employeeColumn
+                                    .eq(cursorValue)
+                                    .and(employee.id.gt(idAfter))   // 2차 정렬 id로
                     );
-        }
-        /* SQL로 하면:
-         *   WHERE employee_name > '홍길동'
-                OR (
-                    employee_name = '홍길동'
-                    AND employee_id > 10
-                )
-        */
 
-        // 오름차순
-        return employeeColumn.gt(cursorValue) // gt = greater than
-                .or(
-                        employeeColumn
-                                .eq(cursorValue)
-                                .and(employee.id.gt(idAfter))   // 2차 정렬 id로
-                );
     }
 
 }
