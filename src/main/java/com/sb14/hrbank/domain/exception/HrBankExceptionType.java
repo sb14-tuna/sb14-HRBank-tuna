@@ -56,7 +56,19 @@ public enum HrBankExceptionType {
         Level.ERROR,
         HttpStatus.NOT_FOUND,
         "해당 파일을 찾을 수 없습니다.",
-        "bad"
+        "파일 id 값이 유효하지 않습니다."
+    ),
+    FILE_UPLOAD_ARGUMENT_INVALID(
+        Level.ERROR,
+        HttpStatus.BAD_REQUEST,
+        "파일 업로드에 실패하였습니다",
+        "파일 업로드에 필요한 데이터가 유효하지 않습니다."
+    ),
+    FILE_UPLOAD_FAILED(
+        Level.ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "파일 업로드에 실패하였습니다",
+        "생성파일 로컬 저장소로 업로드 중에 오류가 발생하였습니다."
     ),
     FILE_LOAD_FAILED(
         Level.ERROR,
@@ -78,6 +90,14 @@ public enum HrBankExceptionType {
         HttpStatus.BAD_REQUEST,
         "백업 이력 상태를 변경할 수 없습니다."
         ,"bad"
+    ),
+
+    // 파일 생성 관련
+    CSV_INIT_FAILED(
+        Level.ERROR,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        "백업 생성 실패",
+        "백업 파일 생성에 실패하였습니다."
     );
 
     Level logLevel;

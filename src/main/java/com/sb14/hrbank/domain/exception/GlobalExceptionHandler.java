@@ -15,7 +15,7 @@ public class GlobalExceptionHandler {
         HrBankExceptionType type = e.getType();
 
         return ResponseEntity.status(type.getStatus())
-            .body(ErrorResponse.of(type));
+            .body(ErrorResponse.from(type));
     }
 
 }
