@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.service.file;
+package com.sb14.hrbank.domain.service.file.fileupload;
 
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
@@ -45,7 +45,7 @@ public abstract class AFileUpload implements FileUpload {
         }
     }
 
-    //
+    @Deprecated
     @Override
     public MetaFile uploadFile(byte[] bytesToFile, FileCategory fileCategory) {
         if(Objects.isNull(bytesToFile) || Objects.isNull(fileCategory)){

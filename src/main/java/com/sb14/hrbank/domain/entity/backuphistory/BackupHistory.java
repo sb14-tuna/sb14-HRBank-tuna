@@ -87,6 +87,8 @@ public class BackupHistory {
 
     public void skipBackup(){
         validateUpdateState();
+
+        this.endedAt = Instant.now();
         this.state = BackupState.SKIPPED;       // 백업 기록이 필요없다 판단된 경우
     }
 

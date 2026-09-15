@@ -10,5 +10,9 @@ public interface FileService {
     MetaFile createFile(MultipartFile file, FileCategory fileCategory);
     void deleteFile(Long id);
     FileDownload getFileDownload(Long id);
-    BackupHistory startBackup(String worker);
+
+    MetaFile completeBackupFile(String filePath, FileCategory category);
+    MetaFile createErrorLogFile(byte[] bytes, FileCategory category);       // 에러 로그 파일 생성
+    String beginFile(FileCategory category);
+    void appendFile(byte[] chunk, String filePath);
 }

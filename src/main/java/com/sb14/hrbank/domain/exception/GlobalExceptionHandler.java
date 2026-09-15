@@ -1,7 +1,5 @@
-package com.sb14.hrbank.web.exception;
+package com.sb14.hrbank.domain.exception;
 
-import com.sb14.hrbank.domain.exception.HrBankException;
-import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
