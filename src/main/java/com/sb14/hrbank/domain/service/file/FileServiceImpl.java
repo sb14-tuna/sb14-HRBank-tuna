@@ -33,9 +33,6 @@ public class FileServiceImpl implements FileService {
     private final FileRepository fileRepository;
     private final FileUpload fileUpload;
 
-    @PersistenceContext
-    private EntityManager entityManager;        // 영속성 관리를 위함
-
     /*
         타 서비스에서 호출로 실행됨
         - 직원 등록 수정 요구사항에서 호출
