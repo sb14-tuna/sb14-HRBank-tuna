@@ -2,6 +2,7 @@ package com.sb14.hrbank.web.controller.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
+import com.sb14.hrbank.domain.service.employee.EmployeeSearchCondition;
 import jakarta.validation.constraints.*;
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -20,7 +21,7 @@ import static org.springframework.util.StringUtils.hasText;
 @Setter
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @NoArgsConstructor
-public class EmployeeSearchRequest {
+public class EmployeeQueryRequest {
 
     // 자유 입력란
     String nameOrEmail;
@@ -68,14 +69,15 @@ public class EmployeeSearchRequest {
         return !hireDateFrom.isAfter(hireDateTo);
     }
 
-    // 커서와 idAfter는 둘다 없거나 둘다 있어야 함
-    @JsonIgnore
-    @AssertTrue(message = "cursor와 idAfter는 둘다 없거나 둘다 있어야 함")
-    public boolean isCursorPairValid() {
-        boolean hasCursor = hasText(cursor);
-        boolean hasIdAfter = Objects.nonNull(idAfter);
+//    Request URL
+//    http://localhost:8080/api/employees?employeeNumber=&size=10&sortField=hireDate&sortDirection=desc&cursor=2023-01-17
 
-        return hasCursor == hasIdAfter;
+    // 프론트는 cursor만 보내기도 함
+    // idAfter만 있을 수는 없음
+    @JsonIgnore
+    @AssertTrue(message = "idAfter를 사용하려면 cursor가 필요함")
+    public boolean isCursorValid() {
+        return Objects.isNull(idAfter) || hasText(cursor);
     }
 
     @JsonIgnore
@@ -91,5 +93,22 @@ public class EmployeeSearchRequest {
         } catch (DateTimeParseException exception) {
             return false;
         }
+    }
+
+    public EmployeeSearchCondition toCondition() {
+        return new EmployeeSearchCondition(
+                nameOrEmail,
+                employeeNumber,
+                departmentName,
+                position,
+                hireDateFrom,
+                hireDateTo,
+                status,
+                idAfter,
+                cursor,
+                size,
+                sortField,
+                sortDirection
+        );
     }
 }

@@ -16,13 +16,24 @@ public class DepartmentDto {
     String name;
     String description;
     LocalDate establishedDate;
+    Long employeeCount;
 
-    public static DepartmentDto from(Department department) {
+    public static DepartmentDto from(
+            Department department,
+            long employeeCount
+    ) {
         return new DepartmentDto(
                 department.getId(),
                 department.getName(),
                 department.getDescription(),
-                department.getEstablishedDate()
+                department.getEstablishedDate(),
+                employeeCount
         );
+    }
+
+    public static DepartmentDto from(
+            Department department
+    ) {
+        return from(department, 0L);
     }
 }

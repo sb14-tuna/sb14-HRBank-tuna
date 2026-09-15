@@ -7,7 +7,7 @@ import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import org.springframework.web.multipart.MultipartFile;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
-import com.sb14.hrbank.domain.repository.FileRepository;
+import com.sb14.hrbank.domain.repository.file.FileRepository;
 
 
 import com.sb14.hrbank.domain.repository.backuphistory.BackupHistoryRepository;
