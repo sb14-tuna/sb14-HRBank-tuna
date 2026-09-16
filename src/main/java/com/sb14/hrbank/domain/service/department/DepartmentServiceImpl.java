@@ -6,6 +6,7 @@ import com.sb14.hrbank.domain.entity.department.DepartmentWithEmployeeCount;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.repository.department.DepartmentRepository;
+import com.sb14.hrbank.domain.repository.employee.EmployeeRepository;
 import com.sb14.hrbank.web.controller.dto.CursorPageResponseDepartmentDto;
 import com.sb14.hrbank.web.controller.dto.DepartmentCreateRequest;
 import com.sb14.hrbank.web.controller.dto.DepartmentDto;
@@ -27,6 +28,7 @@ import static org.springframework.util.StringUtils.hasText;
 public class DepartmentServiceImpl implements DepartmentService {
 
     private final DepartmentRepository departmentRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Override
     @Transactional
@@ -97,6 +99,9 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional
     public void deleteDepartment(Long departmentId) {
         Department department = departmentRepository.findByIdOrThrow(departmentId);
+        if (employeeRepository.existsByDepartmentId(departmentId)){
+            throw new RuntimeException("소속 직원이 있는 부서는 삭제할 수 없음");
+        }
         departmentRepository.delete(department);    // soft delete로 바꿔라
     }
 

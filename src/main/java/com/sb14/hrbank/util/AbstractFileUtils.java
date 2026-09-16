@@ -1,8 +1,9 @@
-package com.sb14.hrbank.domain.service.file;
+package com.sb14.hrbank.util;
 
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -13,7 +14,7 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.multipart.MultipartFile;
 
 @Slf4j
-public abstract class AFileUpload implements FileUpload {
+public abstract class AbstractFileUtils implements FileUtils {
 
     // 멀티파트 오버로딩
     @Override
@@ -45,7 +46,7 @@ public abstract class AFileUpload implements FileUpload {
         }
     }
 
-    //
+    @Deprecated
     @Override
     public MetaFile uploadFile(byte[] bytesToFile, FileCategory fileCategory) {
         if(Objects.isNull(bytesToFile) || Objects.isNull(fileCategory)){
@@ -60,7 +61,7 @@ public abstract class AFileUpload implements FileUpload {
             String fileName = fileCategory.getField() + "_" + UUID.randomUUID() + "." + extension;
             String filePathUrl = getFullPath(fileName);
 
-            String key = storeBackupFile(bytesToFile, filePathUrl);
+            String key = storeFile(bytesToFile, filePathUrl);
             return MetaFile.init(fileName, fileSize, fileType, fileCategory, key);
         }catch (IOException e){
             log.error("===== BACKUP FILE UPLOAD FAILED =====");
@@ -94,6 +95,30 @@ public abstract class AFileUpload implements FileUpload {
         }
     }
 
+    @Override
+    public Path writeFile(byte[] bytes, FileCategory category) {
+        if (Objects.isNull(bytes) || Objects.isNull(category)) {
+            throw new HrBankException(HrBankExceptionType.FILE_UPLOAD_ARGUMENT_INVALID,
+                "파일 데이터 또는 카테고리값이 유효하지 않습니다"
+            );
+        }
+
+        try{
+            String extension = category.equals(FileCategory.BACKUP_CSV) ? "csv" : "log";
+            String fileType = category.equals(FileCategory.BACKUP_CSV) ? "text/csv" : "text/plain";
+            long fileSize = bytes.length;
+            String fileName = category.getField() + "_" + UUID.randomUUID() + "." + extension;
+            String filePathUrl = getFullPath(fileName);
+
+            String key = storeFile(bytes, filePathUrl);
+
+            return Path.of(key).toAbsolutePath().normalize();
+        }catch (IOException e){
+            log.error("===== FILE UPLOAD FAILED =====");
+            throw new HrBankException(HrBankExceptionType.FILE_UPLOAD_FAILED, "파일 업로드하는데 실패함 로컬 파일 업로드쪽 살펴보셈");
+        }
+    }
+
     private String getFileName(FileCategory fileCategory, String originalFileName){
         String extension = extractExt(originalFileName);
         return fileCategory.getField() + "_" + UUID.randomUUID() + "." + extension;
@@ -106,8 +131,8 @@ public abstract class AFileUpload implements FileUpload {
 
     abstract String getFullPath(String fileName);
     abstract String storeFile(MultipartFile file, String filePathUrl) throws IOException;
-    // 오버로딩하는거 리팩토링해야할듯 ;; 어떻게 통일해야하지
-    abstract String storeBackupFile(byte[] bytes, String filePathUrl) throws IOException;
+
+    abstract String storeFile(byte[] bytes, String filePathUrl) throws IOException;
     abstract void delete(String filePath) throws IOException;
     abstract Resource loadPhysicalFile(String key) throws IOException;
 }

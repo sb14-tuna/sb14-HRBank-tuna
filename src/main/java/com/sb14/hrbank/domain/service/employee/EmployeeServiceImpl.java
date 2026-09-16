@@ -4,6 +4,9 @@ import com.sb14.hrbank.domain.entity.department.Department;
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import com.sb14.hrbank.domain.entity.employee.EmployeeHireDateCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
+import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeDetail;
+import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeHistory;
+import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeHistoryType;
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import com.sb14.hrbank.domain.exception.HrBankException;
@@ -11,6 +14,7 @@ import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.repository.department.DepartmentRepository;
 import com.sb14.hrbank.domain.entity.employee.EmployeeGroupCount;
 import com.sb14.hrbank.domain.repository.employee.EmployeeRepository;
+import com.sb14.hrbank.domain.repository.EmployeeChangeHistoryRepository;
 import com.sb14.hrbank.domain.service.file.FileService;
 import com.sb14.hrbank.web.controller.dto.*;
 import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
@@ -20,15 +24,13 @@ import com.sb14.hrbank.web.controller.dto.EmployeeCountRequest;
 import com.sb14.hrbank.web.controller.dto.EmployeeDistributionDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.DayOfWeek;
 import java.time.LocalDate;
-import java.time.Period;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -43,12 +45,14 @@ public class EmployeeServiceImpl implements EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final FileService fileService;
+    private final EmployeeChangeHistoryRepository changeHistoryRepository;
 
     @Override
     @Transactional
     public EmployeeDto createEmployee(
             EmployeeCreateRequest createRequest,
-            MultipartFile profile
+            MultipartFile profile,
+            String ipAddress
     ) {
         employeeRepository.validateUniqueEmail(createRequest.getEmail());
         Department department = departmentRepository
@@ -69,14 +73,112 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee createdEmployee = employeeRepository.save(employee);
 
-        // todo: 생성 이력 히스토리 테이블에 적재
+        // 수정 이력 생성 (CREATED)
+        EmployeeChangeHistory changeHistory = EmployeeChangeHistory.init(
+                EmployeeChangeHistoryType.CREATED,
+                createRequest.getMemo(),
+                ipAddress,
+                LocalDateTime.now(),
+                createdEmployee,
+                new ArrayList<>()
+        );
+
+        /* 수정 전 값 null이고 현재 값 넣기 */
+        // 이름
+        changeHistory.getDiffs().add(
+                EmployeeChangeDetail.init(
+                        "이름",
+                        null,
+                        createdEmployee.getName(),
+                        changeHistory
+                )
+        );
+
+        // 이메일
+        changeHistory.getDiffs().add(
+                EmployeeChangeDetail.init(
+                        "이메일",
+                        null,
+                        createdEmployee.getEmail(),
+                        changeHistory
+                )
+        );
+
+        // 사원 번호
+        changeHistory.getDiffs().add(
+                EmployeeChangeDetail.init(
+                        "사원 번호",
+                        null,
+                        createdEmployee.getEmployeeNumber(),
+                        changeHistory
+                )
+        );
+
+        // 직급
+        changeHistory.getDiffs().add(
+                EmployeeChangeDetail.init(
+                        "직급",
+                        null,
+                        createdEmployee.getPosition(),
+                        changeHistory
+                )
+        );
+
+        // 입사일
+        changeHistory.getDiffs().add(
+                EmployeeChangeDetail.init(
+                        "입사일",
+                        null,
+                        createdEmployee.getHireDate().toString(),
+                        changeHistory
+                )
+        );
+
+        // 상태
+        changeHistory.getDiffs().add(
+                EmployeeChangeDetail.init(
+                        "상태",
+                        null,
+                        createdEmployee.getStatus().name(),
+                        changeHistory
+                )
+        );
+
+        // 부서
+        changeHistory.getDiffs().add(
+                EmployeeChangeDetail.init(
+                        "부서",
+                        null,
+                        createdEmployee.getDepartment().getName(),
+                        changeHistory
+                )
+        );
+
+        // 프로필 이미지
+        if (createdEmployee.getProfileImage() != null) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "프로필 이미지",
+                            null,
+                            String.valueOf(createdEmployee.getProfileImage().getId()),
+                            changeHistory
+                    )
+            );
+        }
+
+        changeHistoryRepository.save(changeHistory);
 
         return EmployeeDto.from(createdEmployee);
     }
 
     @Override
     public EmployeeDto findById(Long employeeId) {
-        Employee employee = employeeRepository.findByIdOrThrow(employeeId);
+        Employee employee = employeeRepository.findByIdAndIsDeletedFalse(employeeId)
+                .orElseThrow(() -> new HrBankException(
+                        HrBankExceptionType.EMPLOYEE_NOT_FOUND,
+                        employeeId.toString())
+                );
+
         return EmployeeDto.from(employee);
     }
 
@@ -108,16 +210,26 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     @Override
     public List<EmployeeTrendDto> getEmployeeTrend(String unit) {
-        return List.of();
+        return List.of();   // 미구현..
     }
 
     @Override
     public EmployeeDto updateEmployee(
             Long employeeId,
             EmployeeUpdateRequest updateRequest,
-            MultipartFile profile
+            MultipartFile profile,
+            String ipAddress
     ) {
         Employee employee = employeeRepository.findByIdOrThrow(employeeId);
+
+        // 직원 정보 수정 전 기존 값
+        String beforeName = employee.getName();
+        String beforeEmail = employee.getEmail();
+        String beforePosition = employee.getPosition();
+        LocalDate beforeHireDate = employee.getHireDate();
+        EmployeeStatus beforeStatus = employee.getStatus();
+        Department beforeDepartment = employee.getDepartment();
+        MetaFile beforeProfileImage = employee.getProfileImage();
 
         // 이메일 변경 됐을 때만 중복 검사
         if (employee.checkIfEmailChanged(updateRequest.getEmail())) {
@@ -166,19 +278,123 @@ public class EmployeeServiceImpl implements EmployeeService {
                 newProfile
         );
 
-        // todo: 업데이트 이력 히스토리 테이블에 적재 - employeeHistoryRepository.save(<>)
+        // 수정 이력 생성 (UPDATED)
+        EmployeeChangeHistory changeHistory = EmployeeChangeHistory.init(
+                EmployeeChangeHistoryType.UPDATED,
+                updateRequest.getMemo(),
+                ipAddress,
+                LocalDateTime.now(),
+                employee,
+                new ArrayList<>()
+        );
+
+        /* 직원 정보 수정 전 갑과 현재 값 비교 */
+        // 이름
+        if (!Objects.equals(beforeName, employee.getName())) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "이름",
+                            beforeName,
+                            employee.getName(),
+                            changeHistory
+                    )
+            );
+        }
+
+        // 이메일
+        if (!Objects.equals(beforeEmail, employee.getEmail())) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "이메일",
+                            beforeEmail,
+                            employee.getEmail(),
+                            changeHistory
+                    )
+            );
+        }
+
+        // 직급
+        if (!Objects.equals(beforePosition, employee.getPosition())) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "직급",
+                            beforePosition,
+                            employee.getPosition(),
+                            changeHistory
+                    )
+            );
+        }
+
+        // 입사일
+        if (!Objects.equals(beforeHireDate, employee.getHireDate())) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "입사일",
+                            beforeHireDate.toString(),
+                            employee.getHireDate().toString(),
+                            changeHistory
+                    )
+            );
+        }
+
+        // 상태
+        if (!Objects.equals(beforeStatus, employee.getStatus())) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "상태",
+                            beforeStatus.name(),
+                            employee.getStatus().name(),
+                            changeHistory
+                    )
+            );
+        }
+
+        // 부서
+        if (!Objects.equals(beforeDepartment.getId(), employee.getDepartment().getId())) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "부서",
+                            beforeDepartment.getName(),
+                            employee.getDepartment().getName(),
+                            changeHistory
+                    )
+            );
+        }
+
+        // 프로필 이미지
+        if (!Objects.equals(beforeProfileImage == null ? null : beforeProfileImage.getId(), newProfile == null ? null : newProfile.getId())) {
+            changeHistory.getDiffs().add(
+                    EmployeeChangeDetail.init(
+                            "프로필 이미지",
+                            beforeProfileImage == null ? null : String.valueOf(beforeProfileImage.getId()),
+                            newProfile == null ? null : String.valueOf(newProfile.getId()),
+                            changeHistory
+                    )
+            );
+        }
+
+        changeHistoryRepository.save(changeHistory);
 
         return EmployeeDto.from(employee);
     }
 
     @Override
     @Transactional
-    public void deleteEmployee(Long employeeId) {
+    public void deleteEmployee(Long employeeId, String ipAddress) {
         Employee employee = employeeRepository.findByIdOrThrow(employeeId);
 
-        // todo: 업데이트 이력 히스토리 테이블에 "직원 삭제"로 적재 - employeeHistoryRepository.save(<>)
+        EmployeeChangeHistory changeHistory = EmployeeChangeHistory.init(
+                EmployeeChangeHistoryType.DELETED,
+                null,
+                ipAddress,
+                LocalDateTime.now(),
+                employee,
+                new ArrayList<>()
+        );
 
-        employeeRepository.delete(employee);    // 수정
+        changeHistoryRepository.save(changeHistory);
+
+        employee.setDeleted();
     }
 
     @Override
@@ -256,5 +472,4 @@ public class EmployeeServiceImpl implements EmployeeService {
             );
         }
     }
-
 }

@@ -15,14 +15,14 @@ import java.util.List;
 
 public interface EmployeeService {
 
-    EmployeeDto createEmployee(EmployeeCreateRequest createRequest, MultipartFile profile);
+    EmployeeDto createEmployee(EmployeeCreateRequest createRequest, MultipartFile profile, String ipAddress);
 
     EmployeeDto findById(Long employeeId);
     CursorPageResponseEmployeeDto findAll(EmployeeSearchCondition request);
 
-    EmployeeDto updateEmployee(Long employeeId, EmployeeUpdateRequest updateRequest, MultipartFile profile);
+    EmployeeDto updateEmployee(Long employeeId, EmployeeUpdateRequest updateRequest, MultipartFile profile, String ipAddress);
 
-    void deleteEmployee(Long employeeId);
+    void deleteEmployee(Long employeeId, String ipAddress);
 
     List<EmployeeDistributionDto> getEmployeeDistribution(String groupBy, EmployeeStatus status);
     long countEmployeeByStatusAndDateRange(EmployeeCountRequest queryCountRequest);

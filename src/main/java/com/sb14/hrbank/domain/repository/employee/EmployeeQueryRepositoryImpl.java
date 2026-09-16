@@ -185,6 +185,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     /* where 절 */
     private BooleanExpression[] searchConditions(EmployeeSearchCondition condition) {
         return new BooleanExpression[]{
+                employee.isDeleted.eq(false),
                 nameOrEmailContains(condition.getNameOrEmail()),
                 employeeNumberContains(condition.getEmployeeNumber()),
                 departmentNameContains(condition.getDepartmentName()),
@@ -194,6 +195,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 statusEquals(condition.getStatus())
         };
     }
+
 
     private BooleanExpression nameOrEmailContains(String keyword) {
         return hasText(keyword)
@@ -235,7 +237,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
 
     /* 정렬 */
     private boolean isDescending(String sortDirection) {    // = is내림차순
-        return "desc".equals(sortDirection);
+        return sortDirection.equals("desc");
     }
     private StringExpression groupColumnByGroupBy(String groupBy) {
         return switch (groupBy) {
@@ -247,6 +249,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
             );
         };
     }
+
     // 1차 정렬 - 사용자가 선택한 거에 대해 정렬
     private OrderSpecifier<?> primarySortBySortField(String sortField, boolean isDescending) {
         return switch (sortField) {
@@ -286,7 +289,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
             String sortField,       // sortField = "name"
             boolean isDescending
     ) {
-        if (!hasText(cursor)) return null;
+        if (!hasText(cursor) && Objects.isNull(idAfter)) return null;   // 첫번째 페이지일때
 
         return switch (sortField) {
             // sortField 따라 비교할 컬럼 지정
