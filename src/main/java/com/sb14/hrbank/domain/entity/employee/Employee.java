@@ -5,7 +5,6 @@ import com.sb14.hrbank.domain.entity.metafile.MetaFile;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.FieldDefaults;
-import org.hibernate.annotations.SoftDelete;
 
 import java.time.LocalDate;
 import java.time.Year;
@@ -17,7 +16,6 @@ import java.util.concurrent.ThreadLocalRandom;
 @Builder(access = AccessLevel.PRIVATE)
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @Entity
-//@SoftDelete -- 얘 하니까 에러 났음. Employee history FetchType.LAZY랑 충돌
 @Table(name = "employees")
 @Getter
 public class Employee {
@@ -82,6 +80,12 @@ public class Employee {
     @JoinColumn(name = "file_id", nullable = true)
     MetaFile profileImage;
 
+    @Column(name = "is_deleted", nullable = false)
+    boolean isDeleted;
+
+    public void setDeleted() {
+        this.isDeleted = true;
+    }
 
     // public 정적 메소드만을 통한 객체 생성
     public static Employee init(
@@ -101,6 +105,7 @@ public class Employee {
                 .hireDate(hireDate)
                 .department(department)
                 .profileImage(profileImage)
+                .isDeleted(false)
                 .build();
     }
 

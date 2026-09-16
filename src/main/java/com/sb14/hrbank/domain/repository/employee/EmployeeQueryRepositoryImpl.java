@@ -36,6 +36,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 .join(employee.department).fetchJoin()  // n+1 방지? - fetch 해옴
                 .leftJoin(employee.profileImage).fetchJoin()    // 프로필 없는 직원도 join (필수 아니었음)
                 .where(
+                        employee.isDeleted.eq(false),
                         // 각 employee row의 컬럼 값이 request에 들어온 값과 같으면 통과
                         nameOrEmailContains(condition.getNameOrEmail()),
                         employeeNumberContains(condition.getEmployeeNumber()),
@@ -74,6 +75,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 .from(employee)
                 .join(employee.department)
                 .where(
+                        employee.isDeleted.eq(false),
                         nameOrEmailContains(condition.getNameOrEmail()),
                         employeeNumberContains(condition.getEmployeeNumber()),
                         departmentNameContains(condition.getDepartmentName()),
@@ -174,6 +176,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     private boolean isDescending(String sortDirection) {    // = is내림차순
         return sortDirection.equals("desc");
     }
+
     private StringExpression groupColumnByGroupBy(String groupBy) {
         return switch (groupBy) {
             case "department" -> employee.department.name;
@@ -184,6 +187,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
             );
         };
     }
+
     // 1차 정렬 - 사용자가 선택한 거에 대해 정렬
     private OrderSpecifier<?> primarySortBySortField(String sortField, boolean isDescending) {
         return switch (sortField) {
