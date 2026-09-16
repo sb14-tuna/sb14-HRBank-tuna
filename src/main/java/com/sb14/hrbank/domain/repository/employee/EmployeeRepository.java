@@ -1,4 +1,4 @@
-package com.sb14.hrbank.domain.repository;
+package com.sb14.hrbank.domain.repository.employee;
 
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import java.time.Instant;

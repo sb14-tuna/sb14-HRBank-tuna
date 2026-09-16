@@ -3,9 +3,7 @@ package com.sb14.hrbank.web.controller;
 import com.sb14.hrbank.domain.entity.department.Department;
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import com.sb14.hrbank.domain.service.department.DepartmentServiceImpl;
-import com.sb14.hrbank.web.controller.dto.DepartmentCreateRequest;
-import com.sb14.hrbank.web.controller.dto.DepartmentDto;
-import com.sb14.hrbank.web.controller.dto.DepartmentUpdateRequest;
+import com.sb14.hrbank.web.controller.dto.*;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +28,30 @@ public class DepartmentApiController {
                 .body(createResult);
     }
 
+
+    @GetMapping("/{id}")
+    public ResponseEntity<DepartmentDto> findById(
+            @PathVariable Long id
+    ) {
+        DepartmentDto result = departmentService.findDepartmentById(id);
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(result);
+    }
+
+    @GetMapping
+    public ResponseEntity<CursorPageResponseDepartmentDto> findAll(
+            @Valid @ModelAttribute DepartmentQueryRequest querySearchRequest
+    ) {
+        CursorPageResponseDepartmentDto querySearchResult = departmentService.findAll(
+                querySearchRequest.toCondition()
+        );
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(querySearchResult);
+    }
+
+
     @PatchMapping("/{id}")
     public ResponseEntity<DepartmentDto> update(
             @PathVariable Long id,
@@ -40,6 +62,7 @@ public class DepartmentApiController {
                 .status(HttpStatus.OK)
                 .body(updateResult);
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<DepartmentDto> delete(

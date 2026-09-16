@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
     @ExceptionHandler(HrBankException.class)
     public ResponseEntity<ErrorResponse> handleHrBankDomainException(HrBankException e){
         log.warn("서비스 로직 처리 중 예외 발생 ------- message : {}", e.getMessage());
@@ -16,4 +17,5 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(type.getStatus())
             .body(ErrorResponse.from(type));
     }
+
 }
