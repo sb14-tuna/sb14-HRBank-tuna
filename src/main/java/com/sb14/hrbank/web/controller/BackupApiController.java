@@ -2,6 +2,7 @@ package com.sb14.hrbank.web.controller;
 
 import com.sb14.hrbank.domain.entity.backuphistory.BackupHistory;
 import com.sb14.hrbank.domain.entity.backuphistory.BackupState;
+import com.sb14.hrbank.domain.service.backup.BackupService;
 import com.sb14.hrbank.domain.service.backuphistory.BackupHistoryInfo;
 import com.sb14.hrbank.domain.service.backuphistory.BackupHistoryService;
 import com.sb14.hrbank.domain.service.backuphistory.BackupSearchCondition;
@@ -25,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/api/backups")
 public class BackupApiController {
-    private final FileService fileService;
+    private final BackupService backupService;
     private final BackupHistoryService backupHistoryService;
 
     @PostMapping
@@ -33,7 +34,7 @@ public class BackupApiController {
         HttpServletRequest request
     ){
         String worker = request.getRemoteAddr();
-        BackupHistory backupHistory = fileService.startBackup(worker);
+        BackupHistory backupHistory = backupService.startBackup(worker);
         BackupDto response = BackupDto.from(backupHistory);
 
         return ResponseEntity.ok(response);

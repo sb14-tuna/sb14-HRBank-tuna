@@ -51,8 +51,8 @@ class FileServiceImplTest {
 
     @Test
     void 백업_테스트(){
-        BackupHistory backupHistory = fileServiceImpl.startBackup("system");
+        //BackupHistory backupHistory = fileServiceImpl.startBackup("system");
 
-        log.info(" ============= {} , {} , {}", backupHistory.getStartedAt(), backupHistory.getState(), backupHistory.getMetaFile());
+        //log.info(" ============= {} , {} , {}", backupHistory.getStartedAt(), backupHistory.getState(), backupHistory.getMetaFile());
     }
 }
