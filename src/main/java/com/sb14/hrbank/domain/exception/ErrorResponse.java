@@ -1,7 +1,6 @@
-package com.sb14.hrbank.web.exception;
+package com.sb14.hrbank.domain.exception;
 
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
-
 import java.time.Instant;
 
 public record ErrorResponse(
@@ -10,7 +9,7 @@ public record ErrorResponse(
     String message,
     String details
 ) {
-    public static ErrorResponse of(HrBankExceptionType type){
+    public static ErrorResponse from(HrBankExceptionType type){
         return new ErrorResponse(
             Instant.now(),
             type.getStatus().value(),
