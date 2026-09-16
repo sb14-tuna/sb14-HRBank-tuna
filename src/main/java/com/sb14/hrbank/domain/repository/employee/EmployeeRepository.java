@@ -4,6 +4,9 @@ import com.sb14.hrbank.domain.entity.employee.Employee;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+
+import com.sb14.hrbank.domain.exception.HrBankException;
+import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,10 +16,27 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long>, EmployeeQueryRepository {
+
     boolean existsByEmail(String email);
     boolean existsByDepartmentId(Long departmentId);
     Optional<Employee> findByIdAndIsDeletedFalse(Long id);
 
+    default void validateUniqueEmail(String email) {
+        if (existsByEmail(email)) {
+            throw new HrBankException(
+                    HrBankExceptionType.EMAIL_ALREADY_EXISTS,
+                    email
+            );
+        }
+    }
+
+    default Employee findByIdOrThrow(Long employeeId) {
+        return findByIdWithDetails(employeeId)
+                .orElseThrow(() -> new HrBankException(
+                        HrBankExceptionType.EMPLOYEE_NOT_FOUND,
+                        String.valueOf(employeeId))
+                );
+    }
     /*
         모든 부서 정보가 아닌 부서 이름만을 가져오는거도 성능과 관련이 있을까
         OOM 조심하라는데 일단 ㄱ

@@ -7,7 +7,7 @@ import com.querydsl.core.types.dsl.ComparableExpression;
 import com.querydsl.core.types.dsl.NumberExpression;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sb14.hrbank.domain.entity.department.Department;
-import com.sb14.hrbank.domain.entity.department.DepartmentEmployeeCount;
+import com.sb14.hrbank.domain.entity.department.DepartmentWithEmployeeCount;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.service.department.DepartmentSearchCondition;
@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.sb14.hrbank.domain.entity.department.QDepartment.department;
 import static com.sb14.hrbank.domain.entity.employee.QEmployee.employee;
@@ -28,32 +29,69 @@ public class DepartmentQueryRepositoryImpl implements DepartmentQueryRepository 
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Department> findAllByCondition(DepartmentSearchCondition condition) {
-        return queryFactory
-                .select(department)
+    public List<DepartmentWithEmployeeCount> findPageByCondition(DepartmentSearchCondition condition) {
+        boolean descending = isDescending(condition.getSortDirection());
+        NumberExpression<Long> employeeCount = employee.id.count();
+
+        List<Tuple> results = queryFactory
+                .select(department, employeeCount)
                 .from(department)
+                .leftJoin(employee)
+                .on(employee.department.eq(department))
                 .where(
                         nameOrDescriptionContains(condition.getNameOrDescription()),
                         cursorCondition(
                                 condition.getCursor(),
                                 condition.getIdAfter(),
                                 condition.getSortField(),
-                                isDescending(condition.getSortDirection())
+                                descending
                         )
                 )
+                .groupBy(department)
                 .orderBy(
                         // 1차 정렬: 사용자가 선택한 정렬 필드로
                         primarySortBySortField(
                                 condition.getSortField(),
-                                isDescending(condition.getSortDirection())
+                                descending
                         ),
                         // 2차 정렬: 부서 id로
-                        secondarySortById(
-                                isDescending(condition.getSortDirection())
-                        )
+                        secondarySortById(descending)
                 )
                 .limit(condition.getSize() + 1)
                 .fetch();
+
+        return results.stream()
+                .map(tuple ->
+                        DepartmentWithEmployeeCount.of(
+                                Objects.requireNonNull(tuple.get(department)),
+                                Objects.requireNonNullElse(tuple.get(employeeCount), 0L)
+                        ))
+                .toList();
+    }
+
+    @Override
+    public Optional<DepartmentWithEmployeeCount> findByIdWithEmployeeCount(Long departmentId) {
+        NumberExpression<Long> employeeCount = employee.id.count();
+
+        Tuple result = queryFactory
+                .select(department, employeeCount)
+                .from(department)
+                .leftJoin(employee)
+                .on(employee.department.eq(department))
+                .where(department.id.eq(departmentId))
+                .groupBy(department)
+                .fetchOne();
+
+        if (Objects.isNull(result)) {
+            return Optional.empty();
+        }
+
+        return Optional.of(
+                DepartmentWithEmployeeCount.of(
+                        Objects.requireNonNull(result.get(department)),
+                        Objects.requireNonNullElse(result.get(employeeCount), 0L)
+                )
+        );
     }
 
     @Override
@@ -61,44 +99,10 @@ public class DepartmentQueryRepositoryImpl implements DepartmentQueryRepository 
         Long totalElements = queryFactory
                 .select(department.count())
                 .from(department)
-                .where(
-                        nameOrDescriptionContains(condition.getNameOrDescription())
-                )
+                .where(nameOrDescriptionContains(condition.getNameOrDescription()))
                 .fetchOne();
-        return (Objects.nonNull(totalElements))
-                ? totalElements
-                : 0;
-    }
 
-    @Override
-    public List<DepartmentEmployeeCount> countEmployeesByDepartment(
-            List<Long> departmentIds
-    ) {
-        if (departmentIds.isEmpty()) return List.of();
-
-        NumberExpression<Long> countColumn = department.count();
-        List<Tuple> results = queryFactory
-                .select(employee.department.id, countColumn)
-                .from(employee)
-                .where(
-                        employee.department.id.in(departmentIds)
-                )
-                .groupBy(employee.department.id)
-                .fetch();
-
-        return results.stream()
-                .map(tuple ->
-                        DepartmentEmployeeCount.of(
-                                tuple.get(employee.department.id),
-                                Objects.requireNonNullElse(
-                                        tuple.get(countColumn),
-                                        0L
-                                )
-                        )
-                )
-                .toList();
-
-
+        return Objects.requireNonNullElse(totalElements, 0L);
     }
 
 
@@ -111,7 +115,6 @@ public class DepartmentQueryRepositoryImpl implements DepartmentQueryRepository 
                   .or(department.description.containsIgnoreCase(keyword))
                 : null;
     }
-
 
     /* 정렬 */
     private boolean isDescending(String sortDirection) {

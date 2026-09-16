@@ -6,13 +6,31 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
 @Getter
-@RequiredArgsConstructor
+@RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public class DepartmentSearchCondition {
     String nameOrDescription;
     Long idAfter;
-    String  cursor;
+    String cursor;
     Integer size;
     String sortField;
     String sortDirection;
+
+    public static DepartmentSearchCondition of(
+            String nameOrDescription,
+            Long idAfter,
+            String cursor,
+            Integer size,
+            String sortField,
+            String sortDirection
+    ) {
+        return new DepartmentSearchCondition(
+                nameOrDescription,
+                idAfter,
+                cursor,
+                size,
+                sortField,
+                sortDirection
+        );
+    }
 }

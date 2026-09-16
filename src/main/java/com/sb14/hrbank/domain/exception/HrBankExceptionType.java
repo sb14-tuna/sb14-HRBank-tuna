@@ -12,6 +12,33 @@ import org.springframework.http.HttpStatus;
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
 public enum HrBankExceptionType {
 
+    // 공통
+    ILLEGAL_DISTRIBUTION_GROUP(
+            Level.ERROR,
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다.",
+            "[GENERAL] 지원하지 않는 분포 그룹"
+    ),
+    ILLEGAL_SORT_FIELD(
+            Level.ERROR,
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다.",
+            "[GENERAL] 지원하지 않는 정렬 기준"
+    ),
+    ILLEGAL_DATE_FORMAT(
+            Level.ERROR,
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다.",
+            "[GENERAL] 잘못된 날짜 형식"
+    ),
+    ILLEGAL_COUNT_UNIT(
+            Level.ERROR,
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다.",
+            "[GENERAL] 잘못된 직원 수 추이 조회 유닛"
+    ),
+
+
     // 직원 관련
     EMPLOYEE_NOT_FOUND(
             Level.ERROR,
@@ -25,30 +52,31 @@ public enum HrBankExceptionType {
             "잘못된 요청입니다.",
             "[EMPLOYEE] 해당 이메일을 가진 직원이 이미 존재함"
     ),
-    ILLEGAL_DISTRIBUTION_GROUP(
+    INVALID_EMPLOYEE_SEARCH_CONDITION(
             Level.ERROR,
             HttpStatus.BAD_REQUEST,
             "잘못된 요청입니다.",
-            "[EMPLOYEE] 지원하지 않는 분포 그룹"
+            "[EMPLOYEE] 잘못된 직원 조회 필드"
     ),
-    ILLEGAL_SORT_FIELD(
-            Level.ERROR,
-            HttpStatus.BAD_REQUEST,
-            "잘못된 요청입니다.",
-            "[EMPLOYEE] 지원하지 않는 정렬 기준"
-    ),
-    ILLEGAL_DATE_FORMAT(
-            Level.ERROR,
-            HttpStatus.BAD_REQUEST,
-            "잘못된 요청입니다.",
-            "[EMPLOYEE] 잘못된 날짜 형식"
-    ),
+
     // 부서 관련
     DEPARTMENT_NOT_FOUND(
             Level.ERROR,
             HttpStatus.NOT_FOUND,
             "잘못된 요청입니다.",
             "[DEPARTMENT] 해당 ID를 가진 부서를 찾을 수 없음"
+    ),
+    DEPARTMENT_ALREADY_EXISTS(
+            Level.ERROR,
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다.",
+            "[DEPARTMENT] 해당 이름을 가진 부서가 이미 존재함"
+    ),
+    INVALID_DEPARTMENT_SEARCH_CONDITION(
+            Level.ERROR,
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다.",
+            "[DEPARTMENT] 잘못된 부서 조회 필드"
     ),
 
     // 파일 관련

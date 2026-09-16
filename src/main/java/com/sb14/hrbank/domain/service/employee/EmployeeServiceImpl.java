@@ -2,6 +2,7 @@ package com.sb14.hrbank.domain.service.employee;
 
 import com.sb14.hrbank.domain.entity.department.Department;
 import com.sb14.hrbank.domain.entity.employee.Employee;
+import com.sb14.hrbank.domain.entity.employee.EmployeeHireDateCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeDetail;
 import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeHistory;
@@ -27,10 +28,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+
+import static org.springframework.util.StringUtils.hasText;
 
 @Service
 @RequiredArgsConstructor
@@ -49,19 +54,9 @@ public class EmployeeServiceImpl implements EmployeeService {
             MultipartFile profile,
             String ipAddress
     ) {
-        if (employeeRepository.existsByEmail(createRequest.getEmail())) {
-            throw new HrBankException(
-                    HrBankExceptionType.EMAIL_ALREADY_EXISTS,
-                    createRequest.getEmail()
-            );
-        }
-
-        Department department = departmentRepository.findById(createRequest.getDepartmentId())
-                .orElseThrow(() -> new HrBankException(
-                            HrBankExceptionType.DEPARTMENT_NOT_FOUND,
-                            createRequest.getDepartmentId().toString()
-                        )
-                );
+        employeeRepository.validateUniqueEmail(createRequest.getEmail());
+        Department department = departmentRepository
+                .findByIdOrThrow(createRequest.getDepartmentId());
 
         MetaFile profileImage = (Objects.nonNull(profile))
                 ? fileService.createFile(profile, FileCategory.PROFILE_IMAGE)
@@ -78,7 +73,6 @@ public class EmployeeServiceImpl implements EmployeeService {
 
         Employee createdEmployee = employeeRepository.save(employee);
 
-        // todo: 생성 이력 히스토리 테이블에 적재
         // 수정 이력 생성 (CREATED)
         EmployeeChangeHistory changeHistory = EmployeeChangeHistory.init(
                 EmployeeChangeHistoryType.CREATED,
@@ -188,58 +182,35 @@ public class EmployeeServiceImpl implements EmployeeService {
         return EmployeeDto.from(employee);
     }
 
+
     @Override
     public CursorPageResponseEmployeeDto findAll(EmployeeSearchCondition request) {
+        validateSearchCondition(request);
+
         List<Employee> searchedEmployees =
-                employeeRepository.findAllByCondition(request);
-
-        boolean hasNextPage = searchedEmployees.size() > request.getSize();
-
-        if (hasNextPage) {
-            searchedEmployees.remove(searchedEmployees.size() - 1);
-        }
-
-        // dto로 변환
-        List<EmployeeDto> searchedEmployeesDto = searchedEmployees.stream()
-                .map(EmployeeDto::from)
-                .toList();
-
-        String nextCursor = null;
-        Long nextIdAfter = null;
-
-        if (hasNextPage) {
-            Employee lastEmployeeOfPage = searchedEmployees.get(searchedEmployees.size() - 1);
-            nextCursor = switch (request.getSortField()) {
-                case "name" ->
-                    lastEmployeeOfPage.getName();
-                case "employeeNumber" ->
-                    lastEmployeeOfPage.getEmployeeNumber();
-                case "hireDate" ->
-                    lastEmployeeOfPage.getHireDate().toString();
-                default ->
-                    throw new IllegalArgumentException("정렬 필드가 아님");
-            };
-            nextIdAfter = lastEmployeeOfPage.getId();
-        }
-
+                employeeRepository.findPageByCondition(request);
         long totalElements = employeeRepository.countByCondition(request);
 
         return CursorPageResponseEmployeeDto.from(
-                searchedEmployeesDto,
-                nextCursor,
-                nextIdAfter,
-                totalElements,
-                hasNextPage
+                searchedEmployees,
+                request.getSize(),
+                request.getSortField(),
+                totalElements
         );
     }
 
     @Override
     public long countEmployeeByStatusAndDateRange(EmployeeCountRequest queryCountRequest) {
-        return employeeRepository.countEmployeesByStatusAndDateRange(
+        return employeeRepository.countByStatusAndHireDateRange(
                 queryCountRequest.getStatus(),
                 queryCountRequest.getFromDate(),
                 queryCountRequest.getToDate()
         );
+    }
+
+    @Override
+    public List<EmployeeTrendDto> getEmployeeTrend(String unit) {
+        return List.of();   // 미구현..
     }
 
     @Override
@@ -249,11 +220,7 @@ public class EmployeeServiceImpl implements EmployeeService {
             MultipartFile profile,
             String ipAddress
     ) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new HrBankException(
-                        HrBankExceptionType.EMPLOYEE_NOT_FOUND,
-                        employeeId.toString())
-                );
+        Employee employee = employeeRepository.findByIdOrThrow(employeeId);
 
         // 직원 정보 수정 전 기존 값
         String beforeName = employee.getName();
@@ -265,20 +232,12 @@ public class EmployeeServiceImpl implements EmployeeService {
         MetaFile beforeProfileImage = employee.getProfileImage();
 
         // 이메일 변경 됐을 때만 중복 검사
-        if (!employee.getEmail().equals(updateRequest.getEmail())
-            && employeeRepository.existsByEmail(updateRequest.getEmail())) {
-            throw new HrBankException(
-                    HrBankExceptionType.EMAIL_ALREADY_EXISTS,
-                    updateRequest.getEmail()
-            );
+        if (employee.checkIfEmailChanged(updateRequest.getEmail())) {
+            employeeRepository.validateUniqueEmail(updateRequest.getEmail());
         }
 
         // 부서 Id로 실제 부서 객체 불러오기
-        Department department = departmentRepository.findById(updateRequest.getDepartmentId())
-                .orElseThrow(() -> new HrBankException(
-                        HrBankExceptionType.DEPARTMENT_NOT_FOUND,
-                        updateRequest.getDepartmentId().toString()
-                ));
+        Department department = departmentRepository.findByIdOrThrow(updateRequest.getDepartmentId());
 
 
         MetaFile previousProfile = employee.getProfileImage();
@@ -308,7 +267,6 @@ public class EmployeeServiceImpl implements EmployeeService {
                 newProfile = null;
             }
         }
-        // 그런데 - 같은 프로필 이미지를 재첨부해서 수정 누르면 중복 저장됨
 
         employee.update(
                 updateRequest.getName(),
@@ -320,7 +278,6 @@ public class EmployeeServiceImpl implements EmployeeService {
                 newProfile
         );
 
-        // todo: 업데이트 이력 히스토리 테이블에 적재
         // 수정 이력 생성 (UPDATED)
         EmployeeChangeHistory changeHistory = EmployeeChangeHistory.init(
                 EmployeeChangeHistoryType.UPDATED,
@@ -424,13 +381,8 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     @Transactional
     public void deleteEmployee(Long employeeId, String ipAddress) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new HrBankException(
-                        HrBankExceptionType.EMPLOYEE_NOT_FOUND,
-                        employeeId.toString())
-                );
+        Employee employee = employeeRepository.findByIdOrThrow(employeeId);
 
-        // todo: 업데이트 이력 히스토리 테이블에 "직원 삭제"로 적재 - employeeHistoryRepository.save(<>)
         EmployeeChangeHistory changeHistory = EmployeeChangeHistory.init(
                 EmployeeChangeHistoryType.DELETED,
                 null,
@@ -448,24 +400,76 @@ public class EmployeeServiceImpl implements EmployeeService {
     @Override
     public List<EmployeeDistributionDto> getEmployeeDistribution(String groupBy, EmployeeStatus status) {
         List<EmployeeGroupCount> groupCounts = employeeRepository
-                .findByEmployeeDistribution(
-                    groupBy,
-                    status
-                );
-        long employeeCount = groupCounts.stream()
-                .mapToLong(EmployeeGroupCount::getCount)
-                .sum();
-        if (employeeCount == 0) return List.of();
+                .findDistribution(groupBy, status);
+        return EmployeeDistributionDto.from(groupCounts);
+    }
 
-        return groupCounts.stream()
-                .map(groupCount -> {
-                    double percentage = Math.round(groupCount.getCount() * 1000.0 / employeeCount) / 10.0;
-                    return EmployeeDistributionDto.of(
-                            groupCount.getGroupKey(),
-                            groupCount.getCount(),
-                            percentage
-                    );
-                })
-                .toList();
+    // ============================================================================================================
+
+    private void validateSearchCondition(EmployeeSearchCondition condition) {
+        validateHireDateRange(condition);
+        validateCursor(condition);
+        validateCursorFormat(condition);
+    }
+
+
+    private void validateHireDateRange(EmployeeSearchCondition condition) {
+        LocalDate from = condition.getHireDateFrom();
+        LocalDate to = condition.getHireDateTo();
+
+        if (Objects.nonNull(from)
+                && Objects.nonNull(to)
+                && from.isAfter(to)) {
+            throw new HrBankException(
+                    HrBankExceptionType.INVALID_EMPLOYEE_SEARCH_CONDITION,
+                    String.format("from: %s, to: %s", from, to)
+            );
+        }
+    }
+
+    private void validateCursor(EmployeeSearchCondition condition) {
+        if (Objects.nonNull(condition.getIdAfter())
+                && !hasText(condition.getCursor())) {
+            throw new HrBankException(
+                    HrBankExceptionType.INVALID_EMPLOYEE_SEARCH_CONDITION,
+                    String.format("idAfter: %s, cursor: %s", condition.getIdAfter(), condition.getCursor())
+            );
+        }
+    }
+
+    private void validateCursorFormat(EmployeeSearchCondition condition) {
+        if (!hasText(condition.getCursor())
+                || !"hireDate".equals(condition.getSortField())) {
+            return;
+        }
+
+        try {
+            LocalDate.parse(condition.getCursor());
+        } catch (DateTimeParseException exception) {
+            throw new HrBankException(
+                    HrBankExceptionType.ILLEGAL_DATE_FORMAT,
+                    "입사일 cursor는 yyyy-MM-dd 형식이어야 합니다."
+            );
+        }
+    }
+
+    private void validateTrendCondition(
+            LocalDate from,
+            LocalDate to,
+            String unit
+    ) {
+        if (from.isAfter(to)) {
+            throw new HrBankException(
+                    HrBankExceptionType.INVALID_EMPLOYEE_SEARCH_CONDITION,
+                    String.format("from: %s, to: %s", from, to)
+            );
+        }
+
+        if (!Set.of("day", "week", "month", "quarter", "year").contains(unit)) {
+            throw new HrBankException(
+                    HrBankExceptionType.ILLEGAL_COUNT_UNIT,
+                    unit
+            );
+        }
     }
 }
