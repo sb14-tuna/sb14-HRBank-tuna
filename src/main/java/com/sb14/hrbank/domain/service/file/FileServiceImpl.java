@@ -81,4 +81,9 @@ public class FileServiceImpl implements FileService {
 
         return fileRepository.save(metaFile);
     }
+
+    @Override
+    public MetaFile save(MetaFile metaFile) {
+        return fileRepository.save(metaFile);
+    }
 }

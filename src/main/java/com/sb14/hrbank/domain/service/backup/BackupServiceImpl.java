@@ -4,8 +4,6 @@ import com.sb14.hrbank.domain.entity.backuphistory.BackupHistory;
 import com.sb14.hrbank.domain.entity.employeehistory.EmployeeChangeHistory;
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
-import com.sb14.hrbank.domain.repository.employee.EmployeeRepository;
-import com.sb14.hrbank.domain.repository.employee.EmployeeRepository.EmployeeCsvForm;
 import com.sb14.hrbank.domain.repository.backuphistory.BackupHistoryRepository;
 import com.sb14.hrbank.domain.repository.employeehistory.EmployeeHistoryRepository;
 import com.sb14.hrbank.domain.service.backuphistory.BackupHistoryService;
@@ -16,9 +14,9 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.List;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
+import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
@@ -32,7 +30,7 @@ public class BackupServiceImpl implements BackupService {
     private final FileService fileService;
     private final BackupHistoryRepository backupHistoryRepository;
     private final EmployeeHistoryRepository employeeHistoryRepository;
-    private final CsvBackupFileGenerator csvBackupFileGenerator;
+    private final BackupFileSaver backupFileSaver;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -94,12 +92,12 @@ public class BackupServiceImpl implements BackupService {
 
         // 백업 진행
         try{
-            Path csvFilePath = csvBackupFileGenerator.createCsvFile();
+            Path csvFilePath = backupFileSaver.saveCsvFile();
             MetaFile metaFile = fileService.completeFile(csvFilePath, FileCategory.BACKUP_CSV);
             backupHistory.attachMetaFile(metaFile);
             backupHistory.completeBackup();
         }catch (Exception e){
-            Path errorLogFilePath = csvBackupFileGenerator.createErrorLogFile(worker, e.getMessage());
+            Path errorLogFilePath = backupFileSaver.createErrorLogFile(worker, e.getMessage());
             MetaFile metaFile = fileService.completeFile(errorLogFilePath, FileCategory.ERROR_LOG);
             backupHistory.attachMetaFile(metaFile);
             backupHistory.failBackup();
