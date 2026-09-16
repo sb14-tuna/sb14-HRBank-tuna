@@ -1,8 +1,10 @@
-package com.sb14.hrbank.domain.service.file;
+package com.sb14.hrbank.domain.service.backup;
 
 import com.opencsv.CSVWriter;
+import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
+import com.sb14.hrbank.util.FileUtils;
 import com.sb14.hrbank.domain.repository.employee.EmployeeRepository;
 import com.sb14.hrbank.domain.repository.employee.EmployeeRepository.EmployeeCsvForm;
 import java.io.ByteArrayOutputStream;
@@ -10,6 +12,7 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -22,9 +25,11 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class FileGenerator {
+public class CsvBackupFileGenerator {
     private final EmployeeRepository employeeRepository;
+    private final FileUtils fileUtils;
 
+    private final long CHUNK_SIZE = 5000L;
     private final String[] columns = {
         "ID",
         "사원번호",
@@ -36,16 +41,41 @@ public class FileGenerator {
         "상태"
     };
 
-    public byte[] createCsvFile(){
-        List<EmployeeCsvForm> employeeCsvForms = employeeRepository.selectEmployeeInfoCsvForm();
+    public Path createCsvFile(){
+        Path filePath = fileUtils.createCsvFile(FileCategory.BACKUP_CSV);
+        long idAfter = 0L;
+        boolean firstPage = true;
 
+        try {
+            while (true) {
+                List<EmployeeCsvForm> employeeCsvForms = employeeRepository
+                    .selectEmployeeInfoCsvFormPage(idAfter, CHUNK_SIZE);
+
+                if (employeeCsvForms.isEmpty()) break;
+
+                byte[] chunk = createCsvChunk(employeeCsvForms, firstPage);
+                fileUtils.appendFile(chunk, filePath.toString());
+
+                idAfter = employeeCsvForms.get(employeeCsvForms.size() - 1).id();
+                firstPage = false;
+            }
+
+            return filePath;
+
+        } catch (Exception e) {
+            fileUtils.deleteFile(filePath.toString());
+            throw e;
+        }
+    }
+
+    private byte[] createCsvChunk(List<EmployeeCsvForm> employeeCsvForms, boolean firstPage){
         try(
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
             CSVWriter csvWriter = new CSVWriter(writer)
         ){
             // 컬럼 명 작성
-            csvWriter.writeNext(columns);
+            if(firstPage) csvWriter.writeNext(columns);
 
             for (EmployeeCsvForm employeeCsvForm : employeeCsvForms) {
                 String[] row = {
@@ -65,19 +95,17 @@ public class FileGenerator {
             csvWriter.flush();
             return outputStream.toByteArray();
         }catch (IOException e){
-            log.warn("===== CSV Create failed =====");
-            // 여기서 메시지를 던지면 그걸 에러 로그 파일에 작성하는거로 가면 될듯
-            throw new HrBankException(HrBankExceptionType.CSV_INIT_FAILED, e.getMessage());
+            log.warn("===== CSV 데이터 생성 실패 =====");
+            throw new HrBankException(HrBankExceptionType.CSV_INIT_FAILED, "CSV 데이터 만들때 실패했음");
         }
     }
 
-
-    public byte[] createErrorLogFile(String worker, String errorReason){
+    public Path createErrorLogFile(String worker, String errorReason){
         StringBuilder builder = new StringBuilder();
         builder.append("date = ").append(Instant.now()).append("\n");
         builder.append("worker = ").append(worker).append("\n");
         builder.append("errorReason = ").append(errorReason).append("\n");
 
-        return builder.toString().getBytes(StandardCharsets.UTF_8);
+        return fileUtils.writeFile(builder.toString().getBytes(StandardCharsets.UTF_8), FileCategory.ERROR_LOG);
     }
 }
