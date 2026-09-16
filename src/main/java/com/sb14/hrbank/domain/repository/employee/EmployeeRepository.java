@@ -4,6 +4,8 @@ import com.sb14.hrbank.domain.entity.employee.Employee;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,6 +15,7 @@ import org.springframework.stereotype.Repository;
 public interface EmployeeRepository extends JpaRepository<Employee, Long>, EmployeeQueryRepository {
     boolean existsByEmail(String email);
     boolean existsByDepartmentId(Long departmentId);
+    Optional<Employee> findByIdAndIsDeletedFalse(Long id);
 
     /*
         모든 부서 정보가 아닌 부서 이름만을 가져오는거도 성능과 관련이 있을까
