@@ -41,3 +41,4 @@ out/
 .env
 .DS_Store
 my/
+/backup_csv
