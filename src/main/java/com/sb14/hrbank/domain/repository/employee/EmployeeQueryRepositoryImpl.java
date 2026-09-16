@@ -2,19 +2,19 @@ package com.sb14.hrbank.domain.repository.employee;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.ComparableExpression;
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.core.types.Visitor;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import com.sb14.hrbank.domain.entity.employee.EmployeeGroupCount;
+import com.sb14.hrbank.domain.entity.employee.EmployeeHireDateCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.service.employee.EmployeeSearchCondition;
 import lombok.RequiredArgsConstructor;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
@@ -127,6 +127,60 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 .fetchOne();
         return (Objects.nonNull(employeeCount)) ? employeeCount : 0;
     }
+
+    @Override
+    public long countHiredBeforeDate(LocalDate date) {
+        Long employeeCount = queryFactory
+                .select(employee.count())
+                .from(employee)
+                .where(employee.hireDate.lt(date))
+                .fetchOne();
+
+        return Objects.requireNonNullElse(employeeCount, 0L);
+    }
+
+    @Override
+    public List<EmployeeHireDateCount> findEmployeeCountByPeriod(LocalDate from, LocalDate to, String unit) {
+        DateExpression<Date> periodStart = getPeriodStartExpression(unit);
+        NumberExpression<Long> countExpression = employee.count();
+
+        List<Tuple> results = queryFactory
+                .select(periodStart, countExpression)
+                .from(employee)
+                .where(employee.hireDate.between(from, to))
+                .groupBy(periodStart)
+                .orderBy(periodStart.asc())
+                .fetch();
+
+        return results.stream()
+                .map(tuple -> EmployeeHireDateCount.of(
+                        Objects.requireNonNull(tuple.get(periodStart)).toLocalDate(),
+                        Objects.requireNonNullElse(tuple.get(countExpression), 0L)
+                ))
+                .toList();
+    }
+
+    private DateExpression<Date> getPeriodStartExpression(String unit) {
+        String unitIfNullThenMonth = (unit == null) ? "month" : unit;
+        String queryTemplate = switch (unitIfNullThenMonth) {
+            case "day" -> "cast(date_trunc('day', {0}) as date)";
+            case "week" -> "cast(date_trunc('week', {0}) as date)";
+            case "month" -> "cast(date_trunc('month', {0}) as date)";
+            case "quarter" -> "cast(date_trunc('quarter', {0}) as date)";
+            case "year" -> "cast(date_trunc('year', {0}) as date)";
+            default ->
+                throw new HrBankException(HrBankExceptionType.ILLEGAL_COUNT_UNIT, unit);
+        };
+
+        return Expressions.dateTemplate(
+                Date.class,
+                queryTemplate,
+                employee.hireDate
+        );
+    }
+
+
+    // ============================================= HELPER FUNCTION ==================================================
 
     /* where 절 */
     private BooleanExpression[] searchConditions(EmployeeSearchCondition condition) {

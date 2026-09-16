@@ -2,6 +2,7 @@ package com.sb14.hrbank.domain.repository.employee;
 
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import com.sb14.hrbank.domain.entity.employee.EmployeeGroupCount;
+import com.sb14.hrbank.domain.entity.employee.EmployeeHireDateCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.service.employee.EmployeeSearchCondition;
 
@@ -21,14 +22,24 @@ public interface EmployeeQueryRepository {
 
     // 분포 그룹, 직원 상태를 주면: 직원 상태에 대해 필터링 한 List<항목, 수> 반환
     List<EmployeeGroupCount> findDistribution(
-            String groupBy,
+            String groupBy,     // 부서 분포 Or 직무 분포
             EmployeeStatus status
     );
 
-    // 상태 + 기간 안에 입사한 직원 수 반환
+    // 상태 + 기간 안에 입사한 직원 수 반환 (대시보드용)
     long countByStatusAndHireDateRange(
             EmployeeStatus status,
             LocalDate fromDate,
             LocalDate toDate
+    );
+
+    // 직원 수 추이 그래프 시작 직전 때 직원 수
+    long countHiredBeforeDate(LocalDate date);
+
+    // 선택한 기간 단위 내 단위별? 입사자 주 반환 (대시보드)
+    List<EmployeeHireDateCount> findEmployeeCountByPeriod(
+            LocalDate from,
+            LocalDate to,
+            String unit
     );
 }

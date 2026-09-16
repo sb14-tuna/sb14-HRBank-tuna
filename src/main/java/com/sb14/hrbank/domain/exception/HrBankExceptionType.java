@@ -31,6 +31,12 @@ public enum HrBankExceptionType {
             "잘못된 요청입니다.",
             "[GENERAL] 잘못된 날짜 형식"
     ),
+    ILLEGAL_COUNT_UNIT(
+            Level.ERROR,
+            HttpStatus.BAD_REQUEST,
+            "잘못된 요청입니다.",
+            "[GENERAL] 잘못된 직원 수 추이 조회 유닛"
+    ),
 
 
     // 직원 관련

@@ -1,5 +1,6 @@
 package com.sb14.hrbank.web.controller;
 
+import com.sb14.hrbank.domain.entity.employee.EmployeeHireDateCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.service.employee.EmployeeSearchCondition;
 import com.sb14.hrbank.domain.service.employee.EmployeeService;
@@ -148,6 +149,30 @@ public class EmployeeApiController {
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .build();
+    }
+
+    @GetMapping("/stats/trend")
+    public ResponseEntity<List<EmployeeTrendDto>> getEmployeeTrend(
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate from,
+
+            @RequestParam(required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
+            LocalDate to,
+
+            @RequestParam(defaultValue = "month")
+            @Pattern(
+                    regexp = "^(day|week|month|quarter|year)$",
+                    message = "집계 단위는 day, week, month, quarter, year 중 하나여야 합니다."
+            )
+            String unit
+    ) {
+        List<EmployeeTrendDto> employeeHireDateCounts = employeeService.getEmployeeTrend(unit);
+
+        return ResponseEntity
+                .status(HttpStatus.OK)
+                .body(employeeHireDateCounts);
     }
 
     @GetMapping("/stats/distribution")

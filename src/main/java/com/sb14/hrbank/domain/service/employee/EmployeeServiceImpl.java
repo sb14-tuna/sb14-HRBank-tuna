@@ -2,6 +2,7 @@ package com.sb14.hrbank.domain.service.employee;
 
 import com.sb14.hrbank.domain.entity.department.Department;
 import com.sb14.hrbank.domain.entity.employee.Employee;
+import com.sb14.hrbank.domain.entity.employee.EmployeeHireDateCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.entity.metafile.FileCategory;
 import com.sb14.hrbank.domain.entity.metafile.MetaFile;
@@ -19,13 +20,18 @@ import com.sb14.hrbank.web.controller.dto.EmployeeCountRequest;
 import com.sb14.hrbank.web.controller.dto.EmployeeDistributionDto;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.Period;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import static org.springframework.util.StringUtils.hasText;
 
@@ -98,6 +104,11 @@ public class EmployeeServiceImpl implements EmployeeService {
                 queryCountRequest.getFromDate(),
                 queryCountRequest.getToDate()
         );
+    }
+
+    @Override
+    public List<EmployeeTrendDto> getEmployeeTrend(String unit) {
+        return List.of();
     }
 
     @Override
@@ -222,6 +233,26 @@ public class EmployeeServiceImpl implements EmployeeService {
             throw new HrBankException(
                     HrBankExceptionType.ILLEGAL_DATE_FORMAT,
                     "입사일 cursor는 yyyy-MM-dd 형식이어야 합니다."
+            );
+        }
+    }
+
+    private void validateTrendCondition(
+            LocalDate from,
+            LocalDate to,
+            String unit
+    ) {
+        if (from.isAfter(to)) {
+            throw new HrBankException(
+                    HrBankExceptionType.INVALID_EMPLOYEE_SEARCH_CONDITION,
+                    String.format("from: %s, to: %s", from, to)
+            );
+        }
+
+        if (!Set.of("day", "week", "month", "quarter", "year").contains(unit)) {
+            throw new HrBankException(
+                    HrBankExceptionType.ILLEGAL_COUNT_UNIT,
+                    unit
             );
         }
     }
