@@ -32,7 +32,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Transactional
     public DepartmentDto createDepartment(DepartmentCreateRequest createRequest) {
         if (departmentRepository.existsByName(createRequest.getName())) {
-            throw new IllegalArgumentException("이미 존재하는 부서명입니다: " + createRequest.getName());
+            throw new HrBankException(HrBankExceptionType.DEPARTMENT_NAME_DUPLICATE, createRequest.getName());
         }
         Department department = Department.init(
                 createRequest.getName(),
@@ -135,10 +135,10 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @Transactional
     public DepartmentDto updateDepartment(Long departmentId, DepartmentUpdateRequest updateRequest) {
-        Department department = departmentRepository.findById(departmentId).orElseThrow(() -> new NoSuchElementException("존재 하지 않는 부서: " + departmentId));
+        Department department = departmentRepository.findById(departmentId).orElseThrow(()-> new HrBankException(HrBankExceptionType.DEPARTMENT_NOT_FOUND, departmentId.toString()));
 
         if (!department.getName().equals(updateRequest.getName()) && departmentRepository.existsByName(updateRequest.getName())) {
-            throw new IllegalArgumentException("이미 존재하는 부서명입니다.: " + updateRequest.getName());
+            throw new HrBankException(HrBankExceptionType.DEPARTMENT_NAME_DUPLICATE, updateRequest.getName());
         }
         department.updateDepartmentInfo(updateRequest.getName(), updateRequest.getDescription(),updateRequest.getEstablishedDate());
 
@@ -149,9 +149,9 @@ public class DepartmentServiceImpl implements DepartmentService {
     @Override
     @Transactional
     public void deleteDepartment(Long departmentId) {
-        Department department = departmentRepository.findById(departmentId).orElseThrow(() -> new NoSuchElementException("존재하지 않는 부서: " + departmentId));
+        Department department = departmentRepository.findById(departmentId).orElseThrow(() -> new HrBankException(HrBankExceptionType.DEPARTMENT_NOT_FOUND, departmentId.toString()));
         if(employeeRepository.existsByDepartmentId(departmentId)){
-            throw new RuntimeException("소속 직원이 있는 부서는 삭제할 수 없음");
+            throw new HrBankException(HrBankExceptionType.DEPARTMENT_HAS_EMPLOYEES, departmentId.toString());
         }
         departmentRepository.delete(department);    // soft delete로 바꿔라
     }

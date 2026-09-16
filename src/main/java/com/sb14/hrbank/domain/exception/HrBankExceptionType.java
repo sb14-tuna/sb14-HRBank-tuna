@@ -50,6 +50,18 @@ public enum HrBankExceptionType {
             "잘못된 요청입니다.",
             "[DEPARTMENT] 해당 ID를 가진 부서를 찾을 수 없음"
     ),
+    DEPARTMENT_NAME_DUPLICATE(
+            Level.ERROR,
+            HttpStatus.CONFLICT,
+            "잘못된 요청입니다.",
+            "[DEPARTMENT] 이미 존재하는 부서명으로 등록/수정을 시도함"
+    ),
+    DEPARTMENT_HAS_EMPLOYEES(
+            Level.ERROR,
+            HttpStatus.CONFLICT,
+            "잘못된 요청입니다.",
+            "[DEPARTMENT] 소속된 직원이 있는 부서를 삭제하려고 시도함"
+    ),
 
     // 파일 관련
     FILE_NOT_FOUND(
