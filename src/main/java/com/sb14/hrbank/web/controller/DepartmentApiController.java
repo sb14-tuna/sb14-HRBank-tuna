@@ -1,10 +1,12 @@
 package com.sb14.hrbank.web.controller;
 
-import com.sb14.hrbank.domain.entity.department.Department;
-import com.sb14.hrbank.domain.entity.employee.Employee;
+import com.sb14.hrbank.domain.service.department.DepartmentSearchCondition;
 import com.sb14.hrbank.domain.service.department.DepartmentServiceImpl;
 import com.sb14.hrbank.web.controller.dto.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -41,11 +43,45 @@ public class DepartmentApiController {
 
     @GetMapping
     public ResponseEntity<CursorPageResponseDepartmentDto> findAll(
-            @Valid @ModelAttribute DepartmentQueryRequest querySearchRequest
+            @RequestParam(required = false)
+            String nameOrDescription,
+
+            @RequestParam(required = false)
+            @Positive(message = "idAfter는 1 이상이어야 합니다.")
+            Long idAfter,
+
+            @RequestParam(required = false)
+            String cursor,
+
+            @RequestParam(defaultValue = "10")
+            @Min(value = 1, message = "size는 1 이상이어야 합니다.")
+            Integer size,
+
+            @RequestParam(defaultValue = "establishedDate")
+            @Pattern(
+                    regexp = "^(name|establishedDate)$",
+                    message = "지원하지 않는 정렬 필드입니다."
+            )
+            String sortField,
+
+            @RequestParam(defaultValue = "asc")
+            @Pattern(
+                    regexp = "^(asc|desc)$",
+                    message = "지원하지 않는 정렬 방향입니다."
+            )
+            String sortDirection
     ) {
-        CursorPageResponseDepartmentDto querySearchResult = departmentService.findAll(
-                querySearchRequest.toCondition()
+        DepartmentSearchCondition condition = DepartmentSearchCondition.of(
+                nameOrDescription,
+                idAfter,
+                cursor,
+                size,
+                sortField,
+                sortDirection
         );
+
+        CursorPageResponseDepartmentDto querySearchResult = departmentService.findAll(condition);
+
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(querySearchResult);

@@ -127,6 +127,9 @@ public class Employee {
         this.profileImage = profileImage;
     }
 
+    public boolean checkIfEmailChanged(String newEmail) {
+        return !this.email.equals(newEmail);    // true = 바뀜, false = 안 바뀜
+    }
 
     private static String generateEmployeeNumber() {
         String year = Year.now().toString();

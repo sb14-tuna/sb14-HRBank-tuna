@@ -2,23 +2,24 @@ package com.sb14.hrbank.domain.repository.employee;
 
 import com.querydsl.core.Tuple;
 import com.querydsl.core.types.OrderSpecifier;
-import com.querydsl.core.types.dsl.BooleanExpression;
-import com.querydsl.core.types.dsl.ComparableExpression;
-import com.querydsl.core.types.dsl.NumberExpression;
-import com.querydsl.core.types.dsl.StringExpression;
+import com.querydsl.core.types.Visitor;
+import com.querydsl.core.types.dsl.*;
 import com.querydsl.jpa.impl.JPAQueryFactory;
 import com.sb14.hrbank.domain.entity.employee.Employee;
 import com.sb14.hrbank.domain.entity.employee.EmployeeGroupCount;
+import com.sb14.hrbank.domain.entity.employee.EmployeeHireDateCount;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.exception.HrBankException;
 import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.domain.service.employee.EmployeeSearchCondition;
 import lombok.RequiredArgsConstructor;
 
+import java.sql.Date;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.sb14.hrbank.domain.entity.employee.QEmployee.employee;
 import static org.springframework.util.StringUtils.hasText;
@@ -29,44 +30,48 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Employee> findAllByCondition(EmployeeSearchCondition condition) {
+    public List<Employee> findPageByCondition(EmployeeSearchCondition condition) {
+        boolean descending = isDescending(condition.getSortDirection());
+
         return queryFactory
                 .select(employee)
                 .from(employee)
                 .join(employee.department).fetchJoin()  // n+1 방지? - fetch 해옴
                 .leftJoin(employee.profileImage).fetchJoin()    // 프로필 없는 직원도 join (필수 아니었음)
+                .where(searchConditions(condition))
                 .where(
-                        employee.isDeleted.eq(false),
-                        // 각 employee row의 컬럼 값이 request에 들어온 값과 같으면 통과
-                        nameOrEmailContains(condition.getNameOrEmail()),
-                        employeeNumberContains(condition.getEmployeeNumber()),
-                        departmentNameContains(condition.getDepartmentName()),
-                        positionContains(condition.getPosition()),
-                        hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
-                        hireDateLessThanOrEqual(condition.getHireDateTo()),
-                        statusEquals(condition.getStatus()),
                         cursorCondition(
                                 condition.getCursor(),
                                 condition.getIdAfter(),
                                 condition.getSortField(),
-                                isDescending(condition.getSortDirection())
+                                descending
                         )
                 )
                 .orderBy(
                         // 1차 정렬: 사용자가 선택한 정렬 필드로
                         primarySortBySortField(
                                 condition.getSortField(),
-                                isDescending(condition.getSortDirection())
+                                descending
                         ),
                         // 2차 정렬: 직원 Id로
-                        secondarySortById(
-                                isDescending(condition.getSortDirection())
-                        )
+                        secondarySortById(descending)
                 )
                 .limit(condition.getSize() + 1)
                 .fetch();
     }
 
+    @Override
+    public Optional<Employee> findByIdWithDetails(Long employeeId) {
+        return Optional.ofNullable(
+                queryFactory
+                        .select(employee)
+                        .from(employee)
+                        .join(employee.department).fetchJoin()
+                        .leftJoin(employee.profileImage).fetchJoin()
+                        .where(employee.id.eq(employeeId))
+                        .fetchOne()
+        );
+    }
 
     @Override
     public long countByCondition(EmployeeSearchCondition condition) {
@@ -74,24 +79,14 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 .select(employee.count())
                 .from(employee)
                 .join(employee.department)
-                .where(
-                        employee.isDeleted.eq(false),
-                        nameOrEmailContains(condition.getNameOrEmail()),
-                        employeeNumberContains(condition.getEmployeeNumber()),
-                        departmentNameContains(condition.getDepartmentName()),
-                        positionContains(condition.getPosition()),
-                        hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
-                        hireDateLessThanOrEqual(condition.getHireDateTo()),
-                        statusEquals(condition.getStatus())
-                )
+                .where(searchConditions(condition))
                 .fetchOne();
-        return (Objects.nonNull(totalElements))
-                ? totalElements
-                : 0;
+
+        return Objects.requireNonNullElse(totalElements, 0L);
     }
 
     @Override
-    public List<EmployeeGroupCount> findByEmployeeDistribution(
+    public List<EmployeeGroupCount> findDistribution(
             String groupBy,
             EmployeeStatus status) {
         StringExpression groupingColumn = groupColumnByGroupBy(groupBy);
@@ -120,7 +115,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     }
 
     @Override
-    public long countEmployeesByStatusAndDateRange(EmployeeStatus status, LocalDate fromDate, LocalDate toDate) {
+    public long countByStatusAndHireDateRange(EmployeeStatus status, LocalDate fromDate, LocalDate toDate) {
         Long employeeCount = queryFactory
                 .select(employee.count())
                 .from(employee)
@@ -133,7 +128,75 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
         return (Objects.nonNull(employeeCount)) ? employeeCount : 0;
     }
 
+    @Override
+    public long countHiredBeforeDate(LocalDate date) {
+        Long employeeCount = queryFactory
+                .select(employee.count())
+                .from(employee)
+                .where(employee.hireDate.lt(date))
+                .fetchOne();
+
+        return Objects.requireNonNullElse(employeeCount, 0L);
+    }
+
+    @Override
+    public List<EmployeeHireDateCount> findEmployeeCountByPeriod(LocalDate from, LocalDate to, String unit) {
+        DateExpression<Date> periodStart = getPeriodStartExpression(unit);
+        NumberExpression<Long> countExpression = employee.count();
+
+        List<Tuple> results = queryFactory
+                .select(periodStart, countExpression)
+                .from(employee)
+                .where(employee.hireDate.between(from, to))
+                .groupBy(periodStart)
+                .orderBy(periodStart.asc())
+                .fetch();
+
+        return results.stream()
+                .map(tuple -> EmployeeHireDateCount.of(
+                        Objects.requireNonNull(tuple.get(periodStart)).toLocalDate(),
+                        Objects.requireNonNullElse(tuple.get(countExpression), 0L)
+                ))
+                .toList();
+    }
+
+    private DateExpression<Date> getPeriodStartExpression(String unit) {
+        String unitIfNullThenMonth = (unit == null) ? "month" : unit;
+        String queryTemplate = switch (unitIfNullThenMonth) {
+            case "day" -> "cast(date_trunc('day', {0}) as date)";
+            case "week" -> "cast(date_trunc('week', {0}) as date)";
+            case "month" -> "cast(date_trunc('month', {0}) as date)";
+            case "quarter" -> "cast(date_trunc('quarter', {0}) as date)";
+            case "year" -> "cast(date_trunc('year', {0}) as date)";
+            default ->
+                throw new HrBankException(HrBankExceptionType.ILLEGAL_COUNT_UNIT, unit);
+        };
+
+        return Expressions.dateTemplate(
+                Date.class,
+                queryTemplate,
+                employee.hireDate
+        );
+    }
+
+
+    // ============================================= HELPER FUNCTION ==================================================
+
     /* where 절 */
+    private BooleanExpression[] searchConditions(EmployeeSearchCondition condition) {
+        return new BooleanExpression[]{
+                employee.isDeleted.eq(false),
+                nameOrEmailContains(condition.getNameOrEmail()),
+                employeeNumberContains(condition.getEmployeeNumber()),
+                departmentNameContains(condition.getDepartmentName()),
+                positionContains(condition.getPosition()),
+                hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
+                hireDateLessThanOrEqual(condition.getHireDateTo()),
+                statusEquals(condition.getStatus())
+        };
+    }
+
+
     private BooleanExpression nameOrEmailContains(String keyword) {
         return hasText(keyword)
                 ? employee.name.containsIgnoreCase(keyword)
@@ -176,7 +239,6 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     private boolean isDescending(String sortDirection) {    // = is내림차순
         return sortDirection.equals("desc");
     }
-
     private StringExpression groupColumnByGroupBy(String groupBy) {
         return switch (groupBy) {
             case "department" -> employee.department.name;
