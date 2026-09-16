@@ -71,11 +71,12 @@ public class BackupServiceImpl implements BackupService {
     @Override
     @Transactional
     public BackupHistory startBackup(String worker){
+        EmployeeChangeHistory employeeHistory = employeeHistoryRepository.findTopByOrderByUpdatedAtDesc()
+            .orElseThrow( () -> new NoSuchElementException("직원 변경 레코드 값이 없음"));
+
         // 트랜잭션2
         BackupHistory backupHistory = entityManager.merge(backupHistoryService.createBackupHistory(worker));    // 새 트랜잭션에서 관리하던 객체를 이전 트랜잭션의 영속성 컨텍스트로 관리하고 싶음
 
-        EmployeeChangeHistory employeeHistory = employeeHistoryRepository.findTopByOrderByUpdatedAtDesc()
-            .orElseThrow( () -> new NoSuchElementException("직원 변경 레코드 값이 없음"));
 
         try{
             if(validateSkipBackup(employeeHistory)){
