@@ -3,6 +3,7 @@ package com.sb14.hrbank.web.controller;
 import com.sb14.hrbank.domain.entity.employee.EmployeeStatus;
 import com.sb14.hrbank.domain.service.employee.EmployeeService;
 import com.sb14.hrbank.web.controller.dto.*;
+import jakarta.servlet.http.HttpServletRequest;
 import com.sb14.hrbank.web.controller.dto.EmployeeCreateRequest;
 import com.sb14.hrbank.web.controller.dto.EmployeeDto;
 import com.sb14.hrbank.web.controller.dto.EmployeeQueryRequest;
@@ -31,9 +32,12 @@ public class EmployeeApiController {
     @PostMapping
     public ResponseEntity<EmployeeDto> create(
             @Valid @RequestPart("employee") EmployeeCreateRequest request,
-            @RequestPart(value = "profile", required = false) MultipartFile profile
+            @RequestPart(value = "profile", required = false) MultipartFile profile,
+            HttpServletRequest httpRequest
     ) {
-        EmployeeDto createResult = employeeService.createEmployee(request, profile);
+        String ipAddress = httpRequest.getRemoteAddr();
+
+        EmployeeDto createResult = employeeService.createEmployee(request, profile, ipAddress);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(createResult);
@@ -66,19 +70,25 @@ public class EmployeeApiController {
     public ResponseEntity<EmployeeDto> update(
             @PathVariable Long id,
             @Valid @RequestPart("employee") EmployeeUpdateRequest updateRequest,
-            @RequestPart(value = "profile", required = false) MultipartFile profile
+            @RequestPart(value = "profile", required = false) MultipartFile profile,
+            HttpServletRequest httpRequest
     ) {
-        EmployeeDto updateResult = employeeService.updateEmployee(id, updateRequest, profile);
+        String ipAddress = httpRequest.getRemoteAddr();
+
+        EmployeeDto updateResult = employeeService.updateEmployee(id, updateRequest, profile, ipAddress);
         return ResponseEntity
                 .status(HttpStatus.OK)
                 .body(updateResult);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(
-            @PathVariable Long id
+   public ResponseEntity<Void> delete(
+            @PathVariable Long id,
+            HttpServletRequest httpRequest
     ) {
-        employeeService.deleteEmployee(id);
+        String ipAddress = httpRequest.getRemoteAddr();
+
+        employeeService.deleteEmployee(id, ipAddress);
         return ResponseEntity
                 .status(HttpStatus.NO_CONTENT)
                 .build();
