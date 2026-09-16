@@ -14,4 +14,15 @@ class BackupServiceImplTest {
         String worker = "system";
         backupService.startBackup(worker);
     }
+
+    @Test
+    void 성능_확인() throws InterruptedException{
+        String worker = "system";
+
+        System.out.println("====== PID >>>>>>>>>>> " + ProcessHandle.current().pid());
+
+        Thread.sleep(20_000);
+        backupService.startBackup(worker);
+        Thread.sleep(60_000);
+    }
 }

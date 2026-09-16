@@ -12,7 +12,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.time.Instant;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -25,12 +27,12 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 @Component
-public class CsvBackupFileGenerator {
+public class BackupFileSaver {
     private final EmployeeRepository employeeRepository;
     private final FileUtils fileUtils;
 
     private final long CHUNK_SIZE = 5000L;
-    private final String[] columns = {
+    private final String[] COLUMNS = {
         "ID",
         "사원번호",
         "이름",
@@ -41,62 +43,61 @@ public class CsvBackupFileGenerator {
         "상태"
     };
 
-    public Path createCsvFile(){
+    public synchronized Path saveCsvFile(){
         Path filePath = fileUtils.createCsvFile(FileCategory.BACKUP_CSV);
-        long idAfter = 0L;
-        boolean firstPage = true;
-
-        try {
-            while (true) {
-                List<EmployeeCsvForm> employeeCsvForms = employeeRepository
-                    .selectEmployeeInfoCsvFormPage(idAfter, CHUNK_SIZE);
-
-                if (employeeCsvForms.isEmpty()) break;
-
-                byte[] chunk = createCsvChunk(employeeCsvForms, firstPage);
-                fileUtils.appendFile(chunk, filePath.toString());
-
-                idAfter = employeeCsvForms.get(employeeCsvForms.size() - 1).id();
-                firstPage = false;
-            }
-
+        try{
+            writeCsv(filePath);
             return filePath;
-
         } catch (Exception e) {
             fileUtils.deleteFile(filePath.toString());
             throw e;
         }
     }
 
-    private byte[] createCsvChunk(List<EmployeeCsvForm> employeeCsvForms, boolean firstPage){
+    private void writeCsv(Path filePath){
+        long idAfter = 0L;
         try(
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            Writer writer = new OutputStreamWriter(outputStream, StandardCharsets.UTF_8);
-            CSVWriter csvWriter = new CSVWriter(writer)
+            CSVWriter csvWriter = new CSVWriter(
+                Files.newBufferedWriter(
+                    filePath,
+                    StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE_NEW,
+                    StandardOpenOption.WRITE
+                )
+            )
         ){
-            // 컬럼 명 작성
-            if(firstPage) csvWriter.writeNext(columns);
+            csvWriter.writeNext(COLUMNS);
 
-            for (EmployeeCsvForm employeeCsvForm : employeeCsvForms) {
-                String[] row = {
-                    employeeCsvForm.id().toString(),
-                    employeeCsvForm.employeeNumber(),
-                    employeeCsvForm.name(),
-                    employeeCsvForm.email(),
-                    employeeCsvForm.departmentName(),
-                    employeeCsvForm.position(),
-                    employeeCsvForm.hireDate().toString(),
-                    employeeCsvForm.status()
-                };
+            while (true) {
+                List<EmployeeCsvForm> employeeCsvForms = employeeRepository
+                    .selectEmployeeInfoCsvFormPage(idAfter, CHUNK_SIZE);
 
-                csvWriter.writeNext(row);
+                if (employeeCsvForms.isEmpty()) break;
+
+                for (EmployeeCsvForm employeeCsvForm : employeeCsvForms) {
+                    String[] row = {
+                        employeeCsvForm.id().toString(),
+                        employeeCsvForm.employeeNumber(),
+                        employeeCsvForm.name(),
+                        employeeCsvForm.email(),
+                        employeeCsvForm.departmentName(),
+                        employeeCsvForm.position(),
+                        employeeCsvForm.hireDate().toString(),
+                        employeeCsvForm.status()
+                    };
+
+                    csvWriter.writeNext(row);
+                }
+
+                idAfter = employeeCsvForms.get(employeeCsvForms.size() - 1).id();
             }
 
             csvWriter.flush();
-            return outputStream.toByteArray();
         }catch (IOException e){
             log.warn("===== CSV 데이터 생성 실패 =====");
-            throw new HrBankException(HrBankExceptionType.CSV_INIT_FAILED, "CSV 데이터 만들때 실패했음");
+            throw new HrBankException(HrBankExceptionType.CSV_INIT_FAILED,
+                "CSV 데이터 만들때 실패했음"
+            );
         }
     }
 
