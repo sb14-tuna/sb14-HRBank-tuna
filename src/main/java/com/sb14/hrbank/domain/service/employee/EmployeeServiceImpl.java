@@ -87,7 +87,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 이름
         changeHistory.getDiffs().add(
                 EmployeeChangeDetail.init(
-                        "이름",
+                        "name",
                         null,
                         createdEmployee.getName(),
                         changeHistory
@@ -97,7 +97,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 이메일
         changeHistory.getDiffs().add(
                 EmployeeChangeDetail.init(
-                        "이메일",
+                        "email",
                         null,
                         createdEmployee.getEmail(),
                         changeHistory
@@ -107,7 +107,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 사원 번호
         changeHistory.getDiffs().add(
                 EmployeeChangeDetail.init(
-                        "사원 번호",
+                        "employeeNumber",
                         null,
                         createdEmployee.getEmployeeNumber(),
                         changeHistory
@@ -117,7 +117,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 직급
         changeHistory.getDiffs().add(
                 EmployeeChangeDetail.init(
-                        "직급",
+                        "position",
                         null,
                         createdEmployee.getPosition(),
                         changeHistory
@@ -127,7 +127,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 입사일
         changeHistory.getDiffs().add(
                 EmployeeChangeDetail.init(
-                        "입사일",
+                        "hireDate",
                         null,
                         createdEmployee.getHireDate().toString(),
                         changeHistory
@@ -137,7 +137,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 상태
         changeHistory.getDiffs().add(
                 EmployeeChangeDetail.init(
-                        "상태",
+                        "status",
                         null,
                         createdEmployee.getStatus().name(),
                         changeHistory
@@ -147,7 +147,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         // 부서
         changeHistory.getDiffs().add(
                 EmployeeChangeDetail.init(
-                        "부서",
+                        "department",
                         null,
                         createdEmployee.getDepartment().getName(),
                         changeHistory
@@ -158,7 +158,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (createdEmployee.getProfileImage() != null) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "프로필 이미지",
+                            "profileImage",
                             null,
                             String.valueOf(createdEmployee.getProfileImage().getId()),
                             changeHistory
@@ -293,7 +293,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (!Objects.equals(beforeName, employee.getName())) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "이름",
+                            "name",
                             beforeName,
                             employee.getName(),
                             changeHistory
@@ -305,7 +305,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (!Objects.equals(beforeEmail, employee.getEmail())) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "이메일",
+                            "email",
                             beforeEmail,
                             employee.getEmail(),
                             changeHistory
@@ -317,7 +317,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (!Objects.equals(beforePosition, employee.getPosition())) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "직급",
+                            "position",
                             beforePosition,
                             employee.getPosition(),
                             changeHistory
@@ -329,7 +329,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (!Objects.equals(beforeHireDate, employee.getHireDate())) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "입사일",
+                            "hireDate",
                             beforeHireDate.toString(),
                             employee.getHireDate().toString(),
                             changeHistory
@@ -341,7 +341,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (!Objects.equals(beforeStatus, employee.getStatus())) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "상태",
+                            "status",
                             beforeStatus.name(),
                             employee.getStatus().name(),
                             changeHistory
@@ -353,7 +353,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (!Objects.equals(beforeDepartment.getId(), employee.getDepartment().getId())) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "부서",
+                            "department",
                             beforeDepartment.getName(),
                             employee.getDepartment().getName(),
                             changeHistory
@@ -365,7 +365,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         if (!Objects.equals(beforeProfileImage == null ? null : beforeProfileImage.getId(), newProfile == null ? null : newProfile.getId())) {
             changeHistory.getDiffs().add(
                     EmployeeChangeDetail.init(
-                            "프로필 이미지",
+                            "profileImage",
                             beforeProfileImage == null ? null : String.valueOf(beforeProfileImage.getId()),
                             newProfile == null ? null : String.valueOf(newProfile.getId()),
                             changeHistory
