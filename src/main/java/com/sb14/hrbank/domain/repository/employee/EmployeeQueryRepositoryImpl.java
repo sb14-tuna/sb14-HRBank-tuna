@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.sb14.hrbank.domain.entity.employee.QEmployee.employee;
 import static org.springframework.util.StringUtils.hasText;
@@ -29,43 +30,48 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     private final JPAQueryFactory queryFactory;
 
     @Override
-    public List<Employee> findAllByCondition(EmployeeSearchCondition condition) {
+    public List<Employee> findPageByCondition(EmployeeSearchCondition condition) {
+        boolean descending = isDescending(condition.getSortDirection());
+
         return queryFactory
                 .select(employee)
                 .from(employee)
                 .join(employee.department).fetchJoin()  // n+1 방지? - fetch 해옴
                 .leftJoin(employee.profileImage).fetchJoin()    // 프로필 없는 직원도 join (필수 아니었음)
+                .where(searchConditions(condition))
                 .where(
-                        // 각 employee row의 컬럼 값이 request에 들어온 값과 같으면 통과
-                        nameOrEmailContains(condition.getNameOrEmail()),
-                        employeeNumberContains(condition.getEmployeeNumber()),
-                        departmentNameContains(condition.getDepartmentName()),
-                        positionContains(condition.getPosition()),
-                        hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
-                        hireDateLessThanOrEqual(condition.getHireDateTo()),
-                        statusEquals(condition.getStatus()),
                         cursorCondition(
                                 condition.getCursor(),
                                 condition.getIdAfter(),
                                 condition.getSortField(),
-                                isDescending(condition.getSortDirection())
+                                descending
                         )
                 )
                 .orderBy(
                         // 1차 정렬: 사용자가 선택한 정렬 필드로
                         primarySortBySortField(
                                 condition.getSortField(),
-                                isDescending(condition.getSortDirection())
+                                descending
                         ),
                         // 2차 정렬: 직원 Id로
-                        secondarySortById(
-                                isDescending(condition.getSortDirection())
-                        )
+                        secondarySortById(descending)
                 )
                 .limit(condition.getSize() + 1)
                 .fetch();
     }
 
+    @Override
+    public Optional<Employee> findByIdWithDetails(Long employeeId) {
+        return Optional.ofNullable(
+                queryFactory
+                        .select(employee)
+                        .from(employee)
+                        .join(employee.department).fetchJoin()
+                        .leftJoin(employee.profileImage).fetchJoin()
+                        .where(employee.id.eq(employeeId))
+                        .fetchOne()
+        );
+    }
 
     @Override
     public long countByCondition(EmployeeSearchCondition condition) {
@@ -73,23 +79,14 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
                 .select(employee.count())
                 .from(employee)
                 .join(employee.department)
-                .where(
-                        nameOrEmailContains(condition.getNameOrEmail()),
-                        employeeNumberContains(condition.getEmployeeNumber()),
-                        departmentNameContains(condition.getDepartmentName()),
-                        positionContains(condition.getPosition()),
-                        hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
-                        hireDateLessThanOrEqual(condition.getHireDateTo()),
-                        statusEquals(condition.getStatus())
-                )
+                .where(searchConditions(condition))
                 .fetchOne();
-        return (Objects.nonNull(totalElements))
-                ? totalElements
-                : 0;
+
+        return Objects.requireNonNullElse(totalElements, 0L);
     }
 
     @Override
-    public List<EmployeeGroupCount> findByEmployeeDistribution(
+    public List<EmployeeGroupCount> findDistribution(
             String groupBy,
             EmployeeStatus status) {
         StringExpression groupingColumn = groupColumnByGroupBy(groupBy);
@@ -118,7 +115,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     }
 
     @Override
-    public long countEmployeesByStatusAndDateRange(EmployeeStatus status, LocalDate fromDate, LocalDate toDate) {
+    public long countByStatusAndHireDateRange(EmployeeStatus status, LocalDate fromDate, LocalDate toDate) {
         Long employeeCount = queryFactory
                 .select(employee.count())
                 .from(employee)
@@ -132,6 +129,18 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
     }
 
     /* where 절 */
+    private BooleanExpression[] searchConditions(EmployeeSearchCondition condition) {
+        return new BooleanExpression[]{
+                nameOrEmailContains(condition.getNameOrEmail()),
+                employeeNumberContains(condition.getEmployeeNumber()),
+                departmentNameContains(condition.getDepartmentName()),
+                positionContains(condition.getPosition()),
+                hireDateGreaterThanOrEqual(condition.getHireDateFrom()),
+                hireDateLessThanOrEqual(condition.getHireDateTo()),
+                statusEquals(condition.getStatus())
+        };
+    }
+
     private BooleanExpression nameOrEmailContains(String keyword) {
         return hasText(keyword)
                 ? employee.name.containsIgnoreCase(keyword)
@@ -172,7 +181,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
 
     /* 정렬 */
     private boolean isDescending(String sortDirection) {    // = is내림차순
-        return sortDirection.equals("desc");
+        return "desc".equals(sortDirection);
     }
     private StringExpression groupColumnByGroupBy(String groupBy) {
         return switch (groupBy) {
@@ -223,7 +232,7 @@ public class EmployeeQueryRepositoryImpl implements EmployeeQueryRepository {
             String sortField,       // sortField = "name"
             boolean isDescending
     ) {
-        if (!hasText(cursor) && Objects.isNull(idAfter)) return null;   // 첫번째 페이지일때
+        if (!hasText(cursor)) return null;
 
         return switch (sortField) {
             // sortField 따라 비교할 컬럼 지정

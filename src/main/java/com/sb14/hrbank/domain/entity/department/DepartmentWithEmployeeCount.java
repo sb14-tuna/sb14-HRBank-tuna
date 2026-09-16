@@ -8,16 +8,16 @@ import lombok.experimental.FieldDefaults;
 @Getter
 @RequiredArgsConstructor
 @FieldDefaults(makeFinal = true, level = AccessLevel.PRIVATE)
-public class DepartmentEmployeeCount {
-    Long departmentId;
+public class DepartmentWithEmployeeCount {
+    Department department;
     Long employeeCount;
 
-    public static DepartmentEmployeeCount of(
-            Long departmentId,
+    public static DepartmentWithEmployeeCount of(
+            Department department,
             Long employeeCount
     ) {
-        return new DepartmentEmployeeCount(
-                departmentId,
+        return new DepartmentWithEmployeeCount(
+                department,
                 employeeCount
         );
     }
