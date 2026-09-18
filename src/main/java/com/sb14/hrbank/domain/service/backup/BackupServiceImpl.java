@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
@@ -71,11 +70,12 @@ public class BackupServiceImpl implements BackupService {
     @Override
     @Transactional
     public BackupHistory startBackup(String worker){
+        EmployeeChangeHistory employeeHistory = employeeHistoryRepository.findTopByOrderByUpdatedAtDesc()
+            .orElseThrow( () -> new NoSuchElementException("직원 변경 레코드 값이 없음"));
+
         // 트랜잭션2
         BackupHistory backupHistory = entityManager.merge(backupHistoryService.createBackupHistory(worker));    // 새 트랜잭션에서 관리하던 객체를 이전 트랜잭션의 영속성 컨텍스트로 관리하고 싶음
 
-        EmployeeChangeHistory employeeHistory = employeeHistoryRepository.findTopByOrderByUpdatedAtDesc()
-            .orElseThrow( () -> new NoSuchElementException("직원 변경 레코드 값이 없음"));
 
         try{
             if(validateSkipBackup(employeeHistory)){
@@ -97,7 +97,7 @@ public class BackupServiceImpl implements BackupService {
             backupHistory.attachMetaFile(metaFile);
             backupHistory.completeBackup();
         }catch (Exception e){
-            Path errorLogFilePath = backupFileSaver.createErrorLogFile(worker, e.getMessage());
+            Path errorLogFilePath = backupFileSaver.saveErrorLogFile(worker, e.getMessage());
             MetaFile metaFile = fileService.completeFile(errorLogFilePath, FileCategory.ERROR_LOG);
             backupHistory.attachMetaFile(metaFile);
             backupHistory.failBackup();
