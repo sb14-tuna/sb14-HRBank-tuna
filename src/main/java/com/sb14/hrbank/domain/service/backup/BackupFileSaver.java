@@ -7,10 +7,7 @@ import com.sb14.hrbank.domain.exception.HrBankExceptionType;
 import com.sb14.hrbank.util.FileUtils;
 import com.sb14.hrbank.domain.repository.employee.EmployeeRepository;
 import com.sb14.hrbank.domain.repository.employee.EmployeeRepository.EmployeeCsvForm;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -101,7 +98,7 @@ public class BackupFileSaver {
         }
     }
 
-    public Path createErrorLogFile(String worker, String errorReason){
+    public Path saveErrorLogFile(String worker, String errorReason){
         StringBuilder builder = new StringBuilder();
         builder.append("date = ").append(Instant.now()).append("\n");
         builder.append("worker = ").append(worker).append("\n");

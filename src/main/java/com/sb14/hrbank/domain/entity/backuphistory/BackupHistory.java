@@ -37,7 +37,7 @@ public class BackupHistory {
     @SequenceGenerator(
         name = "backup_history_seq",
         sequenceName = "backup_histories_seq",
-        allocationSize = 5
+        allocationSize = 1
     )
     @Column(name = "backup_id")
     Long id;
