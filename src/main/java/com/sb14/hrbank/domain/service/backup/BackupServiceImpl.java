@@ -13,7 +13,7 @@ import jakarta.persistence.PersistenceContext;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -113,8 +113,6 @@ public class BackupServiceImpl implements BackupService {
     }
 
     private Instant localDateToInstant(LocalDateTime updatedAt){
-        return updatedAt
-            .atZone(ZoneId.of("Asia/Seoul"))
-            .toInstant();
+        return updatedAt.toInstant(ZoneOffset.UTC);
     }
 }
