@@ -67,4 +67,7 @@ public class EmployeeChangeHistoryServiceImpl implements EmployeeChangeHistorySe
     public Long count(LocalDateTime fromDate, LocalDateTime toDate) {
         return changeHistoryRepository.countByDateRange(fromDate, toDate);
     }
+
+
 }
+
