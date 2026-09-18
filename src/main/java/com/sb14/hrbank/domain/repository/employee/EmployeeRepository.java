@@ -37,10 +37,6 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long>, Emplo
                         String.valueOf(employeeId))
                 );
     }
-    /*
-        모든 부서 정보가 아닌 부서 이름만을 가져오는거도 성능과 관련이 있을까
-        OOM 조심하라는데 일단 ㄱ
-     */
     @Query(value = """
                 select
                   e.employee_id       as id,
