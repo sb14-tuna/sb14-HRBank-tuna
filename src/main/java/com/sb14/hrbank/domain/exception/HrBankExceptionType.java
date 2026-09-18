@@ -86,7 +86,7 @@ public enum HrBankExceptionType {
     ),
     DEPARTMENT_HAS_EMPLOYEES(
             Level.ERROR,
-            HttpStatus.CONFLICT,
+            HttpStatus.BAD_REQUEST,
             "잘못된 요청입니다.",
             "[DEPARTMENT] 소속된 직원이 있는 부서를 삭제하려고 시도함"
     ),

@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.NoSuchElementException;
 import lombok.RequiredArgsConstructor;
-import lombok.Synchronized;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
@@ -98,7 +97,7 @@ public class BackupServiceImpl implements BackupService {
             backupHistory.attachMetaFile(metaFile);
             backupHistory.completeBackup();
         }catch (Exception e){
-            Path errorLogFilePath = backupFileSaver.createErrorLogFile(worker, e.getMessage());
+            Path errorLogFilePath = backupFileSaver.saveErrorLogFile(worker, e.getMessage());
             MetaFile metaFile = fileService.completeFile(errorLogFilePath, FileCategory.ERROR_LOG);
             backupHistory.attachMetaFile(metaFile);
             backupHistory.failBackup();

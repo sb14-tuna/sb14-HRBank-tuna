@@ -100,7 +100,7 @@ public class DepartmentServiceImpl implements DepartmentService {
     public void deleteDepartment(Long departmentId) {
         Department department = departmentRepository.findByIdOrThrow(departmentId);
         if (employeeRepository.existsByDepartmentId(departmentId)){
-            throw new RuntimeException("소속 직원이 있는 부서는 삭제할 수 없음");
+            throw new HrBankException(HrBankExceptionType.DEPARTMENT_HAS_EMPLOYEES, "a?F");
         }
         departmentRepository.delete(department);    // soft delete로 바꿔라
     }
