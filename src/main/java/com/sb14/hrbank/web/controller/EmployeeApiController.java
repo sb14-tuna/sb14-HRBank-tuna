@@ -161,7 +161,7 @@ public class EmployeeApiController {
                 .build();
     }
 
-    @GetMapping("/stats/trend")
+    //@GetMapping("/stats/trend")
     public ResponseEntity<List<EmployeeTrendDto>> getEmployeeTrend(
             @RequestParam(required = false)
             @DateTimeFormat(iso = DateTimeFormat.ISO.DATE)
